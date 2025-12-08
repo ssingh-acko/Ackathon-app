@@ -63,7 +63,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
       final response = await http.post(
         url,
         headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"phoneNumber": phoneController.text, "name": nameController.text}),
+        body: jsonEncode({"phoneNumber": phoneController.text}),
       );
 
       final data = jsonDecode(response.body);

@@ -169,70 +169,93 @@ class _MissionFundingPageState extends State<MissionFundingPage> {
   // -------------------------------------------------------------
   Widget _buildFundingProgressCard() {
     final fundedPercent = widget.data.fundedPercent;
+    final percentText = "${(fundedPercent * 100).round()}%";
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.withOpacity(0.2)),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.grey.withOpacity(0.15)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 20,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
+          // -------------------------------------------------
+          // PROGRESS CIRCLE WITH CLEAN TEXT BACKGROUND
+          // -------------------------------------------------
           SizedBox(
             height: 180,
             width: 180,
             child: Stack(
               alignment: Alignment.center,
               children: [
-                CircularProgressIndicator(
-                  value: fundedPercent,
-                  strokeWidth: 12,
-                  backgroundColor: const Color(0xFFE6E6E6),
-                  valueColor: const AlwaysStoppedAnimation(
-                    Color(0xFF6F3DFA),
+                // Outer Circle
+                SizedBox(
+                  height: 180,
+                  width: 180,
+                  child: CircularProgressIndicator(
+                    value: fundedPercent,
+                    strokeWidth: 14,
+                    backgroundColor: const Color(0xFFE8E8E8),
+                    valueColor:
+                    const AlwaysStoppedAnimation(Color(0xFF6F3DFA)),
                   ),
                 ),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "${(fundedPercent * 100).round()}%",
-                      style: GoogleFonts.urbanist(
-                        fontSize: 44,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFF6F3DFA),
+
+                // White background behind text (fixes overlap)
+                Container(
+                  height: 92,
+                  width: 92,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        percentText,
+                        style: GoogleFonts.urbanist(
+                          fontSize: 38,
+                          fontWeight: FontWeight.w900,
+                          color: const Color(0xFF6F3DFA),
+                        ),
                       ),
-                    ),
-                    Text(
-                      "Funded",
-                      style: GoogleFonts.publicSans(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                      const SizedBox(height: 2),
+                      Text(
+                        "Funded",
+                        style: GoogleFonts.publicSans(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.black87,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
 
-          const SizedBox(height: 8),
+          const SizedBox(height: 22),
 
+          // -------------------------------------------------
+          // RAISED / GOAL TEXT
+          // -------------------------------------------------
           Text.rich(
             TextSpan(
               text: "₹${widget.data.currentPaid}",
               style: GoogleFonts.publicSans(
                 fontSize: 18,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w800,
                 color: const Color(0xFF6F3DFA),
               ),
               children: [
@@ -249,13 +272,17 @@ class _MissionFundingPageState extends State<MissionFundingPage> {
             textAlign: TextAlign.center,
           ),
 
-          const SizedBox(height: 6),
+          const SizedBox(height: 10),
 
+          // -------------------------------------------------
+          // SUBTEXT
+          // -------------------------------------------------
           Text(
             "Every contribution brings us closer to a safer neighborhood!",
             textAlign: TextAlign.center,
             style: GoogleFonts.publicSans(
               fontSize: 13,
+              height: 1.4,
               color: Colors.grey.shade600,
             ),
           ),
@@ -263,6 +290,7 @@ class _MissionFundingPageState extends State<MissionFundingPage> {
       ),
     );
   }
+
 
   // -------------------------------------------------------------
   // FUNDING HEROES CARD
