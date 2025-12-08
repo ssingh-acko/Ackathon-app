@@ -246,7 +246,7 @@ class _HomeViewState extends State<_HomeView> {
         }else{
           Navigator.of(
             context,
-          ).push(CupertinoPageRoute(builder: (context) => MissionFundingParent(issueId: '136e67c6-10dd-41b8-8dc5-3b9b157ec59c',)));
+          ).push(CupertinoPageRoute(builder: (context) => MissionFundingParent(issueId: issue.id)));
         }
 
       },
@@ -265,6 +265,7 @@ class _HomeViewState extends State<_HomeView> {
           ],
         ),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(10),

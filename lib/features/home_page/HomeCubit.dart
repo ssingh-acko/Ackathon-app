@@ -1,10 +1,14 @@
+import 'dart:ui';
+
 import 'package:bloc/bloc.dart';
+import 'package:dio/dio.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'home_model.dart';
 
 class HomeCubit extends Cubit<HomeState> {
   HomeCubit() : super(HomeLoading());
+  final Dio _dio = Dio();
 
   Future<void> loadHomeData() async {
     emit(HomeLoading());
@@ -13,10 +17,23 @@ class HomeCubit extends Cubit<HomeState> {
 
     final locality = await _getUserLocality();
 
+    final getAllIssuesApi = "http://3.109.152.78:8080/api/v1/issues";
+    final response = await _dio.get(getAllIssuesApi);
+    final data = IssueListResponse.fromJson(response.data);
+
     emit(HomeLoaded(
       locality: locality,
       homeActionCards: homeActionCards,     // your existing hardcoded data
-      nearbyIssues: nearbyIssues,           // same here
+      nearbyIssues: data.data.content.map((issue) => NearbyIssue(
+        title: issue.title ?? "",
+        imageUrl: issue.imageUrl.isEmpty ? "https://lh3.googleusercontent.com/aida-public/AB6AXuCSPjkqAGMxouRpNu20f9jvCZFvR79dtIP0htxONzzDFV5QoQZ6-lzIreLJp4RePl-_5_qbay1T3AH-fDYJw1v2jFO7QcAoWAMr93PC6S2HKqG_e68pzV7XWsqccvwRKnd1hVdAGor1OjCuVZF7V0OvQUJ27eawTeFx5dgNm6aGw_21WKvnrbCh_S31Q1QOtSuh4XgM_BCssO1cy16VeKWgVEHJVz8oT88clq4oudDWn80VnaM6nV_bDc3Aay0nQAUli7Znx0Nfsc4": issue.imageUrl,
+        severity: 'HIGH SEVERITY',
+        id: issue.id,
+        severityColor: Color(0xFFB91C1C),
+        severityBg: Color(0xFFFEE2E2),
+        progress: (issue.fundedPercentage == 0) ? 75 : 0,
+        isCompleted: false,
+      )).toList(),           // same here
     ));
   }
 
