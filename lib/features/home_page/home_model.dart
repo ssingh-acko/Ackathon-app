@@ -44,12 +44,12 @@ final homeActionCards = [
     isPrimary: true,
     id: "report"
   ),
-  HomeActionCard(
-    title: "My Active Fixes",
-    subtitle: "Track the progress of your issues.",
-    buttonText: "View",
-    id: "view"
-  ),
+  // HomeActionCard(
+  //   title: "My Active Fixes",
+  //   subtitle: "Track the progress of your issues.",
+  //   buttonText: "View",
+  //   id: "view"
+  // ),
   // HomeActionCard(
   //   title: "Contribute Near You",
   //   subtitle: "Find and fund important projects.",
