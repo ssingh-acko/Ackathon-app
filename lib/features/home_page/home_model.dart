@@ -25,6 +25,7 @@ class NearbyIssue {
   final int progress;
   final bool isCompleted;
   final String id;
+  final String status;
 
   NearbyIssue({
     required this.title,
@@ -35,6 +36,7 @@ class NearbyIssue {
     required this.severityBg,
     required this.progress,
     required this.isCompleted,
+    required this.status,
   });
 }
 
@@ -150,7 +152,7 @@ class IssueItem {
   });
 
   factory IssueItem.fromJson(Map<String, dynamic> json) {
-    double percentage = json["crowdfundingCampaign"] != null ? (double.parse(json["crowdfundingCampaign"]['amountCollected']) / double.parse(json["crowdfundingCampaign"]['amountRequired'])) : 0;
+    double percentage = json["crowdfundingCampaign"] != null ? (json["crowdfundingCampaign"]['amountCollected'] / json["crowdfundingCampaign"]['amountRequired']) : 0;
     return IssueItem(
       id: json["id"] ?? "",
       reporterId: json["reporterId"] ?? "",

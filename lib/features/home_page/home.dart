@@ -38,60 +38,86 @@ class _HomeViewState extends State<_HomeView> {
 
         if (state is HomeLoading) {
           return Scaffold(
-            backgroundColor: isDark
-                ? const Color(0xFF140F23)
-                : const Color(0xFFF6F5F8),
+            backgroundColor:
+            isDark ? const Color(0xFF140F23) : const Color(0xFFF6F5F8),
             body: const Center(child: CircularProgressIndicator()),
           );
         }
 
-        if (state is! HomeLoaded) {
-          return const SizedBox();
-        }
+        if (state is! HomeLoaded) return const SizedBox();
 
         return Scaffold(
-          backgroundColor: isDark
-              ? const Color(0xFF140F23)
-              : const Color(0xFFF6F5F8),
+          backgroundColor:
+          isDark ? const Color(0xFF140F23) : const Color(0xFFF6F5F8),
           body: SafeArea(
             child: RefreshIndicator(
               onRefresh: () => context.read<HomeCubit>().refresh(),
-              child: Column(
-                children: [
-                  // ------------------------ TOP BAR ------------------------
-                  _buildTopBar(state.locality, isDark),
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 6),
 
-                  // ------------------------ CAROUSEL ------------------------
-                  _buildCarousel(context, state.homeActionCards, isDark),
+                    // ------------------------ TOP BAR ------------------------
+                    _buildTopBar(state.locality, isDark),
 
-                  // ------------------------ TITLE ------------------------
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 20, 16, 10),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        "Nearby Issues",
-                        style: GoogleFonts.publicSans(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : Colors.black,
+                    // ------------------------ CAROUSEL ------------------------
+                    _buildCarousel(context, state.homeActionCards, isDark),
+
+                    // ------------------------ TITLE ------------------------
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          "Nearby Issues",
+                          style: GoogleFonts.publicSans(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : Colors.black,
+                          ),
                         ),
                       ),
                     ),
-                  ),
 
-                  // ------------------------ NEARBY LIST ------------------------
-                  Expanded(
-                    child: ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: state.nearbyIssues.length,
-                      itemBuilder: (context, i) {
-                        final issue = state.nearbyIssues[i];
-                        return _buildIssueCard(issue, isDark);
-                      },
+                    const SizedBox(height: 6),
+
+                    // ------------------------ TAB CONTROLLER ------------------------
+                    DefaultTabController(
+                      length: 2,
+                      child: Column(
+                        children: [
+                          TabBar(
+                            labelColor: const Color(0xFF6D38FF),
+                            unselectedLabelColor: isDark
+                                ? Colors.grey[500]
+                                : Colors.grey[700],
+                            labelStyle: GoogleFonts.publicSans(
+                                fontWeight: FontWeight.w700, fontSize: 14),
+                            indicatorColor: const Color(0xFF6D38FF),
+                            tabs: const [
+                              Tab(text: "Ongoing"),
+                              Tab(text: "Completed"),
+                            ],
+                          ),
+
+                          SizedBox(
+                            height:
+                            MediaQuery.of(context).size.height * 0.68,
+                            child: TabBarView(
+                              children: [
+                                _buildOngoingList(
+                                    state.nearbyIssues, isDark),
+                                _buildCompletedList(
+                                    state.nearbyIssues, isDark),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -100,7 +126,7 @@ class _HomeViewState extends State<_HomeView> {
     );
   }
 
-  // -------------------- UI Helpers ---------------------
+  // -------------------- TOP BAR ---------------------
   Widget _buildTopBar(String locality, bool isDark) {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
@@ -109,10 +135,8 @@ class _HomeViewState extends State<_HomeView> {
         children: [
           Row(
             children: [
-              Icon(
-                Icons.location_on,
-                color: isDark ? Colors.white : Colors.black,
-              ),
+              Icon(Icons.location_on,
+                  color: isDark ? Colors.white : Colors.black),
               const SizedBox(width: 6),
               Text(
                 locality,
@@ -124,31 +148,17 @@ class _HomeViewState extends State<_HomeView> {
               ),
             ],
           ),
-          //
-          // // Profile avatar
-          // Container(
-          //   width: 38,
-          //   height: 38,
-          //   decoration: const BoxDecoration(
-          //     shape: BoxShape.circle,
-          //     image: DecorationImage(
-          //       fit: BoxFit.cover,
-          //       image: NetworkImage(
-          //         "https://lh3.googleusercontent.com/aida-public/AB6AXuCAGXwKldzUtpl1b_yw7RovcnmEGOkt_AYfH5kiEX-oCocPWyyBnOHuqDk7LGAsFaQKSz3lwcyrnUUaUlXhisPd5liapEEpwt0Wzg0TzoCa5hyEZg7HvBObJ7-kwNCykBqmsJUZ2oV1Rr7e4U-TblNDKXmhDxyvStlN728eQKwiJGBLNoFxi1_Y9xT0k7YiWkYsG5FVvxLrQ27y6lNZkSaSr7P9komGKFdD96lg0qvB3wjJA7Nb7vOWISLw_Zbd-WPeAcJjS9bFqeU",
-          //       ),
-          //     ),
-          //   ),
-          // )
         ],
       ),
     );
   }
 
+  // -------------------- CAROUSEL ---------------------
   Widget _buildCarousel(
-    BuildContext context,
-    List<HomeActionCard> cards,
-    bool isDark,
-  ) {
+      BuildContext context,
+      List<HomeActionCard> cards,
+      bool isDark,
+      ) {
     return Padding(
       padding: const EdgeInsets.only(top: 16.0),
       child: SizedBox(
@@ -210,8 +220,8 @@ class _HomeViewState extends State<_HomeView> {
                         color: card.isPrimary
                             ? const Color(0xFF6D38FF)
                             : (isDark
-                                  ? Colors.white.withOpacity(0.1)
-                                  : const Color(0xFFF0F0F0)),
+                            ? Colors.white.withOpacity(0.1)
+                            : const Color(0xFFF0F0F0)),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
@@ -234,21 +244,23 @@ class _HomeViewState extends State<_HomeView> {
     );
   }
 
+  // -------------------- ISSUE CARD ---------------------
   Widget _buildIssueCard(NearbyIssue issue, bool isDark) {
     return GestureDetector(
       onTap: () {
-
-        if(issue.progress == 100){
-          Navigator.of(
+        if (issue.status == 'COMPLETED') {
+          Navigator.push(
             context,
-          ).push(CupertinoPageRoute(builder: (context) => MissionAccomplishedPage()));
-
-        }else{
-          Navigator.of(
+            CupertinoPageRoute(builder: (_) => MissionAccomplishedPage(issueId: issue.id)),
+          );
+        } else {
+          Navigator.push(
             context,
-          ).push(CupertinoPageRoute(builder: (context) => MissionFundingParent(issueId: issue.id)));
+            CupertinoPageRoute(
+              builder: (_) => MissionFundingParent(issueId: issue.id),
+            ),
+          );
         }
-
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 14),
@@ -292,10 +304,8 @@ class _HomeViewState extends State<_HomeView> {
                   ),
                   const SizedBox(height: 6),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
+                    padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: issue.severityBg,
                       borderRadius: BorderRadius.circular(8),
@@ -317,12 +327,10 @@ class _HomeViewState extends State<_HomeView> {
                       value: issue.progress / 100,
                       minHeight: 6,
                       color: Colors.green,
-                      backgroundColor: isDark
-                          ? Colors.grey[800]
-                          : Colors.grey[300],
+                      backgroundColor:
+                      isDark ? Colors.grey[800] : Colors.grey[300],
                     ),
                   ),
-
                   const SizedBox(height: 4),
                   Text(
                     "${issue.progress}% funded",
@@ -354,6 +362,49 @@ class _HomeViewState extends State<_HomeView> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  // -------------------- ONGOING LIST ---------------------
+  Widget _buildOngoingList(List<NearbyIssue> all, bool isDark) {
+    final filtered =
+    all.where((e) => e.status != "COMPLETED").toList();
+
+    if (filtered.isEmpty) return _emptyMessage("No ongoing issues right now.");
+
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      itemCount: filtered.length,
+      itemBuilder: (context, i) => _buildIssueCard(filtered[i], isDark),
+    );
+  }
+
+  // -------------------- COMPLETED LIST ---------------------
+  Widget _buildCompletedList(List<NearbyIssue> all, bool isDark) {
+    final filtered =
+    all.where((e) => e.status == "COMPLETED").toList();
+
+    if (filtered.isEmpty) return _emptyMessage("No completed issues yet.");
+
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      itemCount: filtered.length,
+      itemBuilder: (context, i) => _buildIssueCard(filtered[i], isDark),
+    );
+  }
+
+  Widget _emptyMessage(String text) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.only(top: 40),
+        child: Text(
+          text,
+          style: GoogleFonts.publicSans(
+            fontSize: 14,
+            color: Colors.grey,
+          ),
         ),
       ),
     );

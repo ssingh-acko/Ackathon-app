@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../incident_details/cubit.dart';
+import '../pdp_page/generic_view.dart';
 import '../pdp_page/pdp_page.dart';
 import 'broadcast_group.dart';
 import 'model/launch_mission_data.dart';
@@ -184,7 +185,7 @@ class _CrowdfundMissionPageState extends State<CrowdfundMissionPage> {
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.push(context,
-                        CupertinoPageRoute(builder: (_) => const PdpScreen()));
+                        CupertinoPageRoute(builder: (_) => MissionFundingParent(issueId: widget.data.id)));
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF6F42C1),
