@@ -23,8 +23,8 @@ class ReportPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildHeaderTexts(dark),
-                    const SizedBox(height: 12),
-                    _buildSearchAndEmergency(context, dark),
+                    // const SizedBox(height: 12),
+                    // _buildSearchAndEmergency(context, dark),
                     const SizedBox(height: 20),
                     _buildIssueCategories(context, dark),
                     const SizedBox(height: 24),
@@ -324,14 +324,14 @@ class ReportPage extends StatelessWidget {
               color: dark ? Colors.grey.shade400 : Colors.grey.shade600,
             ),
           ),
-          const SizedBox(height: 6),
-          Text(
-            "See what issues are being fixed now",
-            style: GoogleFonts.publicSans(
-              color: const Color(0xFF6F3DFA),
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+          // const SizedBox(height: 6),
+          // Text(
+          //   "See what issues are being fixed now",
+          //   style: GoogleFonts.publicSans(
+          //     color: const Color(0xFF6F3DFA),
+          //     fontWeight: FontWeight.w600,
+          //   ),
+          // ),
         ],
       ),
     );
@@ -359,7 +359,7 @@ class ReportPage extends StatelessWidget {
             SizedBox(width: 16),
             Expanded(
               child: Text(
-                "Not sure? Take a photo and our AI will suggest a category",
+                "Not sure? Take a photo",
                 style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
               ),
             ),
