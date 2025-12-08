@@ -1,3 +1,5 @@
+import 'package:ackathon/features/funding_hero/funding_hero_page.dart';
+import 'package:ackathon/features/ai_solutions/ai_solutions_page.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -25,6 +27,33 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
   bool isLoading = false;
   bool _paymentInitiated = false;
 
+  @override
+  void initState() {
+    super.initState();
+    // Add listeners to update button state when text changes
+    nameController.addListener(_updateButtonState);
+    phoneController.addListener(_updateButtonState);
+  }
+
+  @override
+  void dispose() {
+    nameController.removeListener(_updateButtonState);
+    phoneController.removeListener(_updateButtonState);
+    nameController.dispose();
+    phoneController.dispose();
+    super.dispose();
+  }
+
+  void _updateButtonState() {
+    setState(() {}); // Rebuild to update button state
+  }
+
+  bool get _isFormValid {
+    final name = nameController.text.trim();
+    final phone = phoneController.text.trim();
+    return name.isNotEmpty && phone.length == 10;
+  }
+
   Future<void> handleSignIn() async {
     setState(() => isLoading = true);
 
@@ -34,7 +63,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
       final response = await http.post(
         url,
         headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"phoneNumber": phoneController.text}),
+        body: jsonEncode({"phoneNumber": phoneController.text, "name": nameController.text}),
       );
 
       final data = jsonDecode(response.body);
@@ -85,43 +114,6 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
     );
   }
 
-  Future<void> launchUPI({
-    required String upiId,
-    required String name,
-    required int amount,
-  }) async {
-    final uri = Uri.parse("upi://pay?pa=$upiId&pn=$name&am=$amount&cu=INR");
-
-    if (await canLaunchUrl(uri)) {
-      _paymentInitiated = true;
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
-      throw "UPI apps not found!";
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-    checkIfGoHome();
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    super.didChangeAppLifecycleState(state);
-    // When app comes back to foreground after payment was initiated, close the app
-    if (_paymentInitiated && state == AppLifecycleState.resumed) {
-      SystemNavigator.pop();
-    }
-  }
-
   checkIfGoHome() {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final prefs = await SharedPreferences.getInstance();
@@ -138,6 +130,22 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
       MaterialPageRoute(builder: (context) => const PaymentPage()),
     );
   }
+
+  void navigateToFundingHeroPage() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const FundingHeroPage()),
+    );
+  }
+
+  void navigateToAISolutionsPage() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const AISolutionsPage()),
+    );
+  }
+
+  final _formKey = GlobalKey<FormState>();
 
   @override
   Widget build(BuildContext context) {
@@ -166,91 +174,164 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
                 ),
               ],
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  "Sign In",
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-                // const SizedBox(height: 20),
-                //
-                // // Name Input
-                // TextField(
-                //   controller: nameController,
-                //   decoration: InputDecoration(
-                //     labelText: "Full Name",
-                //     border: OutlineInputBorder(
-                //       borderRadius: BorderRadius.circular(16),
-                //     ),
-                //   ),
-                // ),
-                const SizedBox(height: 20),
-
-                // Phone Input
-                TextField(
-                  controller: phoneController,
-                  keyboardType: TextInputType.phone,
-                  decoration: InputDecoration(
-                    labelText: "Phone Number",
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    "Sign In",
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
                     ),
                   ),
-                ),
-                const SizedBox(height: 24),
-
-                // Sign In Button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: isLoading ? null : handleSignIn,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF7C3AED),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
+                  const SizedBox(height: 20),
+                  //
+                  // // Name Input
+                  TextFormField(
+                    controller: nameController,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')),
+                    ],
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please enter your name';
+                      }
+                      return null;
+                    },
+                    decoration: InputDecoration(
+                      labelText: "Full Name",
+                      border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
                     ),
-                    child: isLoading
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text(
-                            "Sign In",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                  ),
+                  const SizedBox(height: 12),
+                  // Phone Input
+                  TextFormField(
+                    controller: phoneController,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
+                      LengthLimitingTextInputFormatter(10),
+                    ],
+                    keyboardType: TextInputType.phone,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your phone number';
+                      }
+                      if (value.length != 10) {
+                        return 'Phone number must be 10 digits';
+                      }
+                      return null;
+                    },
+                    decoration: InputDecoration(
+                      labelText: "Phone Number",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+                  // Sign In Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: (isLoading || !_isFormValid)
+                          ? null
+                          : handleSignIn,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _isFormValid && !isLoading
+                            ? const Color(0xFF7C3AED)
+                            : Colors.grey,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        disabledBackgroundColor: Colors.grey,
+                      ),
+                      child: isLoading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text(
+                              "Sign In",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                             ),
-                          ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: navigateToPaymentPage,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF7C3AED),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    child: const Text(
-                      "Open Payment page",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
                     ),
                   ),
-                ),
-              ],
+                  // const SizedBox(height: 24),
+                  // SizedBox(
+                  //   width: double.infinity,
+                  //   child: ElevatedButton(
+                  //     onPressed: navigateToPaymentPage,
+                  //     style: ElevatedButton.styleFrom(
+                  //       backgroundColor: const Color(0xFF7C3AED),
+                  //       padding: const EdgeInsets.symmetric(vertical: 14),
+                  //       shape: RoundedRectangleBorder(
+                  //         borderRadius: BorderRadius.circular(16),
+                  //       ),
+                  //     ),
+                  //     child: const Text(
+                  //       "Open Payment page",
+                  //       style: TextStyle(
+                  //         fontSize: 16,
+                  //         fontWeight: FontWeight.bold,
+                  //         color: Colors.white,
+                  //       ),
+                  //     ),
+                  //   ),
+                  // ),
+                  // const SizedBox(height: 24),
+                  // SizedBox(
+                  //   width: double.infinity,
+                  //   child: ElevatedButton(
+                  //     onPressed: navigateToFundingHeroPage,
+                  //     style: ElevatedButton.styleFrom(
+                  //       backgroundColor: const Color(0xFF7C3AED),
+                  //       padding: const EdgeInsets.symmetric(vertical: 14),
+                  //       shape: RoundedRectangleBorder(
+                  //         borderRadius: BorderRadius.circular(16),
+                  //       ),
+                  //     ),
+                  //     child: const Text(
+                  //       "Open Funding Hero page",
+                  //       style: TextStyle(
+                  //         fontSize: 16,
+                  //         fontWeight: FontWeight.bold,
+                  //         color: Colors.white,
+                  //       ),
+                  //     ),
+                  //   ),
+                  // ),
+                  // const SizedBox(height: 24),
+                  // SizedBox(
+                  //   width: double.infinity,
+                  //   child: ElevatedButton(
+                  //     onPressed: navigateToAISolutionsPage,
+                  //     style: ElevatedButton.styleFrom(
+                  //       backgroundColor: const Color(0xFF7C3AED),
+                  //       padding: const EdgeInsets.symmetric(vertical: 14),
+                  //       shape: RoundedRectangleBorder(
+                  //         borderRadius: BorderRadius.circular(16),
+                  //       ),
+                  //     ),
+                  //     child: const Text(
+                  //       "Open AI Solutions page",
+                  //       style: TextStyle(
+                  //         fontSize: 16,
+                  //         fontWeight: FontWeight.bold,
+                  //         color: Colors.white,
+                  //       ),
+                  //     ),
+                  //   ),
+                  // ),
+                ],
+              ),
             ),
           ),
         ),

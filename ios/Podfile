@@ -1,5 +1,5 @@
 # Uncomment this line to define a global platform for your project
-platform :ios, '10.0'  # Razorpay requires iOS 10.0 or higher
+platform :ios, '14.0'  # Minimum iOS version for Flutter plugins compatibility
 
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
