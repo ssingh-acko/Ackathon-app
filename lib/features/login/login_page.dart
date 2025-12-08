@@ -125,13 +125,6 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
     });
   }
 
-  void navigateToPaymentPage() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const PaymentPage()),
-    );
-  }
-
   void navigateToFundingHeroPage() {
     Navigator.push(
       context,

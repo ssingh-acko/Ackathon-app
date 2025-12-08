@@ -1,3 +1,4 @@
+import 'package:ackathon/features/login/payment_page.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -38,8 +39,9 @@ class _ContributeBottomSheetState extends State<ContributeBottomSheet> {
             width: 55,
             margin: const EdgeInsets.only(bottom: 20),
             decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(40)),
+              color: Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(40),
+            ),
           ),
 
           Text(
@@ -87,15 +89,17 @@ class _ContributeBottomSheetState extends State<ContributeBottomSheet> {
                 ),
               ),
               onPressed: () {
-                // TODO: integrate payment
-                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => PaymentPage(amount: amount)),
+                );
               },
               child: Text(
                 "Pay ₹${amount.toInt()}",
                 style: GoogleFonts.publicSans(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white
+                  color: Colors.white,
                 ),
               ),
             ),

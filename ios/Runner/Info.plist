@@ -47,5 +47,27 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>razorpay</string>
+			</array>
+		</dict>
+	</array>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>razorpay</string>
+		<string>paytm</string>
+		<string>phonepe</string>
+		<string>gpay</string>
+		<string>tez</string>
+		<string>upi</string>
+		<string>https</string>
+		<string>http</string>
+	</array>
 </dict>
 </plist>
