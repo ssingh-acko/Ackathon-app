@@ -1,4 +1,5 @@
 import 'dart:ui';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -69,40 +70,46 @@ class _MissionFundingMainState extends State<MissionFundingMain> {
   Widget build(BuildContext context) {
     final data = widget.data;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF7F7FA),
-      body: Stack(
-        children: [
-          SingleChildScrollView(
-            padding: const EdgeInsets.only(bottom: 100),
-            child: Column(
-              children: [
-                _buildHeader(context, data),
-                const SizedBox(height: 16),
+    return WillPopScope(
+      onWillPop: () async {
+        Navigator.popUntil(context, (route) => route.settings.name == "HomeScreen");
+        return Future.value(false);
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF7F7FA),
+        body: Stack(
+          children: [
+            SingleChildScrollView(
+              padding: const EdgeInsets.only(bottom: 100),
+              child: Column(
+                children: [
+                  _buildHeader(context, data),
+                  const SizedBox(height: 16),
 
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    children: [
-                      _buildFundingProgressCard(data),
-                      if (data.heroesList.isNotEmpty) ...[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
+                      children: [
+                        _buildFundingProgressCard(data),
+                        if (data.heroesList.isNotEmpty) ...[
+                          const SizedBox(height: 20),
+                          _buildFundingHeroesCard(data),
+                        ],
                         const SizedBox(height: 20),
-                        _buildFundingHeroesCard(data),
+                        _buildVendorBidsCard(data),
+                        const SizedBox(height: 20),
+                        _buildImpactCard(),
+                        const SizedBox(height: 40),
                       ],
-                      const SizedBox(height: 20),
-                      _buildVendorBidsCard(data),
-                      const SizedBox(height: 20),
-                      _buildImpactCard(),
-                      const SizedBox(height: 40),
-                    ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
 
-          _buildContributeButton(context, data),
-        ],
+            _buildContributeButton(context, data),
+          ],
+        ),
       ),
     );
   }
@@ -141,7 +148,9 @@ class _MissionFundingMainState extends State<MissionFundingMain> {
               children: [
                 _glassIcon(
                   Icons.arrow_back_ios_new,
-                  () => Navigator.pop(context),
+                  () {
+                    Navigator.popUntil(context, (route) => route.settings.name == "HomeScreen");
+                  },
                 ),
                 _glassIcon(Icons.share, () {}),
               ],
@@ -506,7 +515,11 @@ class _MissionFundingMainState extends State<MissionFundingMain> {
                       ),
                       Row(
                         children: [
-                          const Icon(Icons.star, size: 16, color: Colors.yellow),
+                          const Icon(
+                            Icons.star,
+                            size: 16,
+                            color: Colors.yellow,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             "${bid.rating} (${bid.reviews} reviews)",
