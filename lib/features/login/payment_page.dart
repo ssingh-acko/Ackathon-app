@@ -1,6 +1,7 @@
 import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
+import 'package:share_plus/share_plus.dart';
 
 class PaymentPage extends StatefulWidget {
   final double amount;
@@ -12,6 +13,7 @@ class PaymentPage extends StatefulWidget {
 
 class _PaymentPageState extends State<PaymentPage> {
   bool isLoading = false;
+  bool isPaymentSuccess = false;
   late Razorpay _razorpay;
 
   @override
@@ -119,17 +121,18 @@ class _PaymentPageState extends State<PaymentPage> {
   void _handlePaymentSuccess(PaymentSuccessResponse response) {
     if (!mounted) return;
     setState(() {
+      isPaymentSuccess = true;
       isLoading = false;
     });
     debugPrint('Payment Success: ${response.paymentId}');
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Payment Successful'),
-        backgroundColor: Colors.green,
-      ),
-    );
+    // ScaffoldMessenger.of(context).showSnackBar(
+    //   const SnackBar(
+    //     content: Text('Payment Successful'),
+    //     backgroundColor: Colors.green,
+    //   ),
+    // );
     // Optionally navigate back or to another page
-    Navigator.of(context).pop();
+    // Navigator.of(context).pop();
   }
 
   void _handlePaymentError(PaymentFailureResponse response) {
@@ -138,12 +141,7 @@ class _PaymentPageState extends State<PaymentPage> {
       isLoading = false;
     });
     debugPrint('Payment Error: ${response.code} - ${response.message}');
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Payment Failed: ${response.message}'),
-        backgroundColor: Colors.red,
-      ),
-    );
+    Navigator.of(context).pop();
   }
 
   void _handleExternalWallet(ExternalWalletResponse response) {
@@ -174,14 +172,49 @@ class _PaymentPageState extends State<PaymentPage> {
             colors: [Color(0xFF8B5CF6), Color(0xFF7C3AED)],
           ),
         ),
-        child: Center(
-          child: isLoading
-              ? const CircularProgressIndicator(color: Colors.white)
-              : const Text(
-                  'Opening payment gateway...',
-                  style: TextStyle(color: Colors.white, fontSize: 16),
+        child: !isPaymentSuccess
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(Icons.check_circle, color: Colors.white, size: 100),
+                    SizedBox(height: 8),
+                    Text(
+                      'Payment Successful',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Thank you for your contribution!',
+                      style: TextStyle(color: Colors.white, fontSize: 16),
+                    ),
+                    SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () {
+                        SharePlus.instance.share(
+                          ShareParams(
+                            text: 'Can you help me with this mission?',
+                          ),
+                        );
+                      },
+                      child: Text('Share'),
+                    ),
+                  ],
                 ),
-        ),
+              )
+            : Center(
+                child: isLoading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text(
+                        'Opening payment gateway...',
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      ),
+              ),
       ),
     );
   }
