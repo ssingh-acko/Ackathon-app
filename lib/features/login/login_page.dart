@@ -11,8 +11,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../home_page/home.dart';
 import '../oboarding/pages/screen.dart';
 import '../vendor_page/vendor_page.dart';
-import 'payment_page.dart';
-
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -125,13 +123,6 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
         goToHomePage();
       }
     });
-  }
-
-  void navigateToPaymentPage() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const PaymentPage()),
-    );
   }
 
   void navigateToFundingHeroPage() {
