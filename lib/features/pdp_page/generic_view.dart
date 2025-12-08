@@ -686,6 +686,7 @@ class _MissionFundingMainState extends State<MissionFundingMain> {
               style: GoogleFonts.publicSans(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
+                color: Colors.white,
               ),
             ),
           ),
