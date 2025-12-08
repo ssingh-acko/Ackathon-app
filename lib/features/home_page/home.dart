@@ -281,9 +281,25 @@ class _HomeViewState extends State<_HomeView> {
             ),
           ],
 
-          vendorsList: [
-            "FixIt Crew",
-            "RoadWorks Co.",
+          vendorBids: [
+            VendorBid(
+              vendorName: "FixIt Crew",
+              avatar: "https://i.pravatar.cc/150?img=60",
+              proposedAmount: 10000,
+              timeline: "3 Days",
+              rating: 4.9,
+              reviews: 124,
+              status: "Accepted",
+            ),
+            VendorBid(
+              vendorName: "RoadWorks Co.",
+              avatar: "https://i.pravatar.cc/150?img=59",
+              proposedAmount: 10000,
+              timeline: "5 Days",
+              rating: 4.7,
+              reviews: 88,
+              status: "rejected",
+            ),
           ],
         );
 

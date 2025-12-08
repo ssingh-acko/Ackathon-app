@@ -33,6 +33,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
     // Add listeners to update button state when text changes
     nameController.addListener(_updateButtonState);
     phoneController.addListener(_updateButtonState);
+    checkIfGoHome();
   }
 
   @override
@@ -146,6 +147,8 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
   }
 
   final _formKey = GlobalKey<FormState>();
+
+  
 
   @override
   Widget build(BuildContext context) {
