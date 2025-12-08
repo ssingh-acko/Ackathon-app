@@ -62,7 +62,11 @@ class _ExecutedMissionScreenState extends State<ExecutedMissionScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Icon(Icons.arrow_back, color: Colors.white, size: 26),
+          GestureDetector(
+            onTap: (){
+              Navigator.pop(context);
+            },
+              child: const Icon(Icons.arrow_back, color: Colors.white, size: 26)),
           Expanded(
             child: Text(
               "Mission: Pothole on Elm Street",

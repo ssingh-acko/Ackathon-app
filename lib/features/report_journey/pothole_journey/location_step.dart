@@ -115,10 +115,10 @@ class _ReportLocationStepState extends State<ReportLocationStep> {
                   Expanded(
                     child: _bar(2, active: true),
                   ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: _bar(3, active: false),
-                  ),
+                  // const SizedBox(width: 6),
+                  // Expanded(
+                  //   child: _bar(3, active: false),
+                  // ),
                 ],
               ),
             ),
@@ -203,7 +203,7 @@ class _ReportLocationStepState extends State<ReportLocationStep> {
                           ? null
                           : () async {
                         final String? address = await getAddressFromLatLng(selectedLatLng?.latitude, selectedLatLng?.longitude);
-                        Navigator.push(context, CupertinoPageRoute(builder: (_) => IncidentDetailsPage(data: incidentDummy,)));
+                        Navigator.push(context, CupertinoPageRoute(builder: (_) => IncidentDetailsPage()));
                         // Navigator.push(context, CupertinoPageRoute(builder: (context) => ReportDescriptionStep(
                         //   address: address??"",
                         //   latitude: selectedLatLng!.latitude,

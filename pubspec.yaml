@@ -42,6 +42,7 @@ dependencies:
   package_info_plus: ^8.3.0
   location: ^6.0.2
   onboarding: ^4.0.2
+  url_launcher: ^6.2.5
   # Google Fonts package
   google_fonts:
   geolocator:
@@ -50,6 +51,7 @@ dependencies:
   google_maps_flutter:
   cached_network_image:
   flutter_upi_india:
+  razorpay_flutter: ^1.4.0
   dio:
   share_plus:
   # Material Symbols package

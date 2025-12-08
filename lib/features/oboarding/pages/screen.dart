@@ -28,7 +28,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         children: [
           // Background Image
           Positioned.fill(
-            child: Image.asset("assets/onboarding_3.jpeg", fit: BoxFit.cover),
+            child: Image.asset(step.bgImage, fit: BoxFit.cover),
           ),
 
           // Gradient overlay
