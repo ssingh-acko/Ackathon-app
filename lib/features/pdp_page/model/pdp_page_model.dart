@@ -9,7 +9,7 @@ class MissionFundingModel {
 
   final List<HeroContributor> heroesList;
 
-  final List<String> vendorsList; // **not used for UI yet**
+  final List<VendorBid> vendorBids;
 
   MissionFundingModel({
     required this.title,
@@ -19,7 +19,7 @@ class MissionFundingModel {
     required this.totalAmount,
     required this.currentPaid,
     required this.heroesList,
-    required this.vendorsList,
+    this.vendorBids = const [],
   });
 
   double get fundedPercent => currentPaid / totalAmount;
@@ -35,5 +35,39 @@ class HeroContributor {
     required this.name,
     required this.imageUrl,
     required this.amount,
+  });
+}
+
+class VendorInfo {
+  final String name;
+  final String imageUrl;
+  final int amount;
+
+  VendorInfo({
+    required this.name,
+    required this.imageUrl,
+    required this.amount,
+  });
+}
+
+class VendorBid {
+  final String vendorName;
+  final String avatar;
+  final double proposedAmount;
+  final String timeline;
+  final double rating;
+  final int reviews;
+  final String status; // pending, rejected, considered, critical
+  final int thumbsUp;
+
+  VendorBid({
+    required this.vendorName,
+    required this.avatar,
+    required this.proposedAmount,
+    required this.timeline,
+    required this.rating,
+    required this.reviews,
+    required this.status,
+    this.thumbsUp = 0,
   });
 }
