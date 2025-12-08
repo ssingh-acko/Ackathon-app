@@ -600,7 +600,7 @@ class _MissionFundingMainState extends State<MissionFundingMain> {
                   ? "Initiate Mission Go!"
                   : "Contribute Now & Be a Hero!",
               style: GoogleFonts.publicSans(
-                  fontSize: 16, fontWeight: FontWeight.bold),
+                  fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
             ),
           ),
         ),
