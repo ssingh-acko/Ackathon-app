@@ -1,5 +1,6 @@
 import 'package:ackathon/features/funding_hero/funding_hero_page.dart';
 import 'package:ackathon/features/ai_solutions/ai_solutions_page.dart';
+import 'package:ackathon/shared/app_constants.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -7,7 +8,6 @@ import 'package:flutter/services.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../home_page/home.dart';
 import '../oboarding/pages/screen.dart';
 import '../vendor_page/vendor_page.dart';
@@ -57,7 +57,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
   Future<void> handleSignIn() async {
     setState(() => isLoading = true);
 
-    final url = Uri.parse("http://3.109.152.78:8080/api/v1/auth/login");
+    final url = Uri.parse("${AppConstants.apiUrl}/api/v1/auth/login");
 
     try {
       final response = await http.post(
