@@ -154,12 +154,15 @@ class _MissionFundingMainState extends State<MissionFundingMain> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  data.title,
-                  style: GoogleFonts.publicSans(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
+                Container(
+                  width: MediaQuery.of(context).size.width,
+                  child: Text(
+                    data.title,
+                    style: GoogleFonts.publicSans(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -216,6 +219,7 @@ class _MissionFundingMainState extends State<MissionFundingMain> {
     final fundedPercent = data.fundedPercent;
 
     return Container(
+      width: MediaQuery.of(context).size.width,
       padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -307,6 +311,7 @@ class _MissionFundingMainState extends State<MissionFundingMain> {
         );
       },
       child: Container(
+        width: MediaQuery.of(context).size.width,
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -476,7 +481,11 @@ class _MissionFundingMainState extends State<MissionFundingMain> {
           ),
         ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            //-----------------------------------------------------------
+            // HEADER ROW
+            //-----------------------------------------------------------
             Row(
               children: [
                 CircleAvatar(
@@ -495,11 +504,10 @@ class _MissionFundingMainState extends State<MissionFundingMain> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      //Rating and reviews
                       Row(
                         children: [
-                          Icon(Icons.star, size: 16, color: Colors.yellow),
-                          SizedBox(width: 4),
+                          const Icon(Icons.star, size: 16, color: Colors.yellow),
+                          const SizedBox(width: 4),
                           Text(
                             "${bid.rating} (${bid.reviews} reviews)",
                             style: GoogleFonts.publicSans(
@@ -518,6 +526,9 @@ class _MissionFundingMainState extends State<MissionFundingMain> {
 
             const SizedBox(height: 14),
 
+            //-----------------------------------------------------------
+            // BID AMOUNT + TIMELINE
+            //-----------------------------------------------------------
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -546,7 +557,7 @@ class _MissionFundingMainState extends State<MissionFundingMain> {
                 Column(
                   children: [
                     Text(
-                      "Estimated Timeline",
+                      "Timeline",
                       style: GoogleFonts.publicSans(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -568,17 +579,53 @@ class _MissionFundingMainState extends State<MissionFundingMain> {
               ],
             ),
 
-            if (selected) ...[
-              const SizedBox(height: 14),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF6F3DFA),
-                  foregroundColor: Colors.white,
-                ),
-                onPressed: () {},
-                child: const Text("View Full Proposal"),
+            const SizedBox(height: 16),
+
+            //-----------------------------------------------------------
+            // MATERIALS USED
+            //-----------------------------------------------------------
+            Text(
+              "Materials Used",
+              style: GoogleFonts.publicSans(
+                fontSize: 14,
+                color: Colors.grey.shade600,
+                fontWeight: FontWeight.w600,
               ),
-            ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              bid.materialUsed.join(", "),
+              style: GoogleFonts.publicSans(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            //-----------------------------------------------------------
+            // WHY CHOOSE ME
+            //-----------------------------------------------------------
+            Text(
+              "Why choose me",
+              style: GoogleFonts.publicSans(
+                fontSize: 14,
+                color: Colors.grey.shade600,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              bid.whyChooseMe,
+              style: GoogleFonts.publicSans(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                height: 1.3,
+              ),
+            ),
+
+            // extra spacing if selected to match design flow
+            if (selected) const SizedBox(height: 8),
           ],
         ),
       ),

@@ -59,6 +59,8 @@ class VendorBid {
   final int reviews;
   final String status; // pending, rejected, considered, critical
   final int thumbsUp;
+  final List<String> materialUsed;
+  final String whyChooseMe;
 
   VendorBid({
     required this.vendorName,
@@ -69,5 +71,7 @@ class VendorBid {
     required this.reviews,
     required this.status,
     this.thumbsUp = 0,
+    required this.materialUsed,
+    required this.whyChooseMe,
   });
 }

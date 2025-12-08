@@ -93,6 +93,8 @@ class MissionFundingCubit extends Cubit<MissionFundingState> {
                 rating: 4.9,
                 reviews: 100,
                 status: content.status,
+                materialUsed: content.primaryMaterialUsed,
+                whyChooseMe: content.whyChooseTeam,
               ),
             )
             .toList(),
