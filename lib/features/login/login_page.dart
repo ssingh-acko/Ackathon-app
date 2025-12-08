@@ -33,7 +33,9 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
     // Add listeners to update button state when text changes
     nameController.addListener(_updateButtonState);
     phoneController.addListener(_updateButtonState);
-    checkIfGoHome();
+    WidgetsBinding.instance.addPostFrameCallback((_){
+      checkIfGoHome();
+    });
   }
 
   @override

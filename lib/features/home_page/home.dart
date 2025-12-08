@@ -311,7 +311,7 @@ class _HomeViewState extends State<_HomeView> {
         }else{
           Navigator.of(
             context,
-          ).push(CupertinoPageRoute(builder: (context) => MissionFundingPage(data: mockMission,)));
+          ).push(CupertinoPageRoute(builder: (context) => MissionFundingParent(issueId: '136e67c6-10dd-41b8-8dc5-3b9b157ec59c',)));
         }
 
       },

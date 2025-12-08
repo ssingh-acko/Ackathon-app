@@ -35,8 +35,8 @@ class IncidentDetailsCubit extends Cubit<IncidentDetailsState> {
     emit(IncidentLoading());
 
     try {
-      final url = "http://3.109.152.78:8080/api/v1/issues/$issueId";
-      final response = await _dio.get(url);
+      final incidentUrl = "http://3.109.152.78:8080/api/v1/issues/$issueId";
+      final response = await _dio.get(incidentUrl);
 
       if (response.statusCode == 200 && response.data["success"] == true) {
         incidentReport = IncidentReport.fromJson(response.data);

@@ -1,26 +1,76 @@
 import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'contribute_screen.dart';
+import 'cubit.dart';
 import 'funding_heroes_page.dart';
 import 'model/pdp_page_model.dart';
-// import 'mission_funding_model.dart';
 
-class MissionFundingPage extends StatefulWidget {
-  final MissionFundingModel data;
+class MissionFundingParent extends StatelessWidget {
+  final String issueId;
 
-  const MissionFundingPage({super.key, required this.data});
+  const MissionFundingParent({super.key, required this.issueId});
 
-  @override
-  State<MissionFundingPage> createState() => _MissionFundingPageState();
-}
-
-class _MissionFundingPageState extends State<MissionFundingPage> {
-  int? _selectedVendorIndex;
   @override
   Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => MissionFundingCubit(issueId),
+      child: const MissionFundingPage(),
+    );
+  }
+}
+
+class MissionFundingPage extends StatelessWidget {
+  const MissionFundingPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<MissionFundingCubit, MissionFundingState>(
+      builder: (context, state) {
+        if (state is MissionFundingLoading) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if (state is MissionFundingError) {
+          return Scaffold(
+            body: Center(child: Text(state.message)),
+          );
+        }
+
+        if (state is MissionFundingLoaded) {
+          return MissionFundingMain(data: state.data);
+        }
+
+        return const SizedBox();
+      },
+    );
+  }
+}
+
+// ===================================================================
+// FULL PAGE — UI + LOGIC
+// ===================================================================
+class MissionFundingMain extends StatefulWidget {
+  final MissionFundingModel data;
+
+  const MissionFundingMain({super.key, required this.data});
+
+  @override
+  State<MissionFundingMain> createState() => _MissionFundingMainState();
+}
+
+class _MissionFundingMainState extends State<MissionFundingMain> {
+  int? _selectedVendorIndex;
+
+  @override
+  Widget build(BuildContext context) {
+    final data = widget.data;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF7F7FA),
       body: Stack(
@@ -29,17 +79,20 @@ class _MissionFundingPageState extends State<MissionFundingPage> {
             padding: const EdgeInsets.only(bottom: 100),
             child: Column(
               children: [
-                _buildHeader(context),
+                _buildHeader(context, data),
                 const SizedBox(height: 16),
+
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Column(
                     children: [
-                      _buildFundingProgressCard(),
+                      _buildFundingProgressCard(data),
+                      if(data.heroesList.isNotEmpty)...[
+                        const SizedBox(height: 20),
+                        _buildFundingHeroesCard(data),
+                      ],
                       const SizedBox(height: 20),
-                      _buildFundingHeroesCard(),
-                      const SizedBox(height: 20),
-                      _buildVendorBidsCard(),
+                      _buildVendorBidsCard(data),
                       const SizedBox(height: 20),
                       _buildImpactCard(),
                       const SizedBox(height: 40),
@@ -50,23 +103,23 @@ class _MissionFundingPageState extends State<MissionFundingPage> {
             ),
           ),
 
-          _buildContributeButton(context),
+          _buildContributeButton(context, data),
         ],
       ),
     );
   }
 
-  // -------------------------------------------------------------
+  // ===================================================================
   // HEADER
-  // -------------------------------------------------------------
-  Widget _buildHeader(BuildContext context) {
+  // ===================================================================
+  Widget _buildHeader(BuildContext context, MissionFundingModel data) {
     return SizedBox(
       height: 260,
       width: double.infinity,
       child: Stack(
         fit: StackFit.expand,
         children: [
-          Image.network(widget.data.headerImage, fit: BoxFit.cover),
+          Image.network(data.headerImage, fit: BoxFit.cover),
 
           Container(
             decoration: BoxDecoration(
@@ -88,45 +141,35 @@ class _MissionFundingPageState extends State<MissionFundingPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _glassIconButton(
-                  icon: Icons.arrow_back_ios_new,
-                  onTap: () => Navigator.pop(context),
-                ),
-                _glassIconButton(icon: Icons.share, onTap: () {}),
+                _glassIcon(Icons.arrow_back_ios_new, () => Navigator.pop(context)),
+                _glassIcon(Icons.share, () {}),
               ],
             ),
           ),
 
           Positioned(
             left: 16,
-            right: 16,
             bottom: 20,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  widget.data.title,
+                  data.title,
                   style: GoogleFonts.publicSans(
                     fontSize: 28,
                     fontWeight: FontWeight.w800,
                     color: Colors.white,
-                    height: 1.1,
                   ),
                 ),
                 const SizedBox(height: 6),
                 Row(
                   children: [
-                    const Icon(
-                      Icons.location_on,
-                      color: Colors.white,
-                      size: 20,
-                    ),
+                    const Icon(Icons.location_on, color: Colors.white, size: 20),
                     const SizedBox(width: 4),
                     Text(
-                      widget.data.location,
+                      data.location,
                       style: GoogleFonts.publicSans(
                         fontSize: 14,
-                        fontWeight: FontWeight.w500,
                         color: Colors.white,
                       ),
                     ),
@@ -140,7 +183,7 @@ class _MissionFundingPageState extends State<MissionFundingPage> {
     );
   }
 
-  Widget _glassIconButton({required IconData icon, VoidCallback? onTap}) {
+  Widget _glassIcon(IconData icon, VoidCallback onTap) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(999),
       child: BackdropFilter(
@@ -148,11 +191,10 @@ class _MissionFundingPageState extends State<MissionFundingPage> {
         child: InkWell(
           onTap: onTap,
           child: Container(
-            height: 40,
-            width: 40,
-            alignment: Alignment.center,
+            height: 42,
+            width: 42,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withOpacity(0.25),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: Colors.white, size: 20),
@@ -162,12 +204,11 @@ class _MissionFundingPageState extends State<MissionFundingPage> {
     );
   }
 
-  // -------------------------------------------------------------
+  // ===================================================================
   // FUNDING PROGRESS CARD
-  // -------------------------------------------------------------
-  Widget _buildFundingProgressCard() {
-    final fundedPercent = widget.data.fundedPercent;
-    final percentText = "${(fundedPercent * 100).round()}%";
+  // ===================================================================
+  Widget _buildFundingProgressCard(MissionFundingModel data) {
+    final fundedPercent = data.fundedPercent;
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
@@ -184,18 +225,13 @@ class _MissionFundingPageState extends State<MissionFundingPage> {
         ],
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         children: [
-          // -------------------------------------------------
-          // PROGRESS CIRCLE WITH CLEAN TEXT BACKGROUND
-          // -------------------------------------------------
           SizedBox(
             height: 180,
             width: 180,
             child: Stack(
               alignment: Alignment.center,
               children: [
-                // Outer Circle
                 SizedBox(
                   height: 180,
                   width: 180,
@@ -203,11 +239,10 @@ class _MissionFundingPageState extends State<MissionFundingPage> {
                     value: fundedPercent,
                     strokeWidth: 14,
                     backgroundColor: const Color(0xFFE8E8E8),
-                    valueColor: const AlwaysStoppedAnimation(Color(0xFF6F3DFA)),
+                    valueColor:
+                    const AlwaysStoppedAnimation(Color(0xFF6F3DFA)),
                   ),
                 ),
-
-                // White background behind text (fixes overlap)
                 Container(
                   height: 92,
                   width: 92,
@@ -219,7 +254,7 @@ class _MissionFundingPageState extends State<MissionFundingPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        percentText,
+                        "${(fundedPercent * 100).round()}%",
                         style: GoogleFonts.urbanist(
                           fontSize: 38,
                           fontWeight: FontWeight.w900,
@@ -227,14 +262,9 @@ class _MissionFundingPageState extends State<MissionFundingPage> {
                         ),
                       ),
                       const SizedBox(height: 2),
-                      Text(
-                        "Funded",
-                        style: GoogleFonts.publicSans(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.black87,
-                        ),
-                      ),
+                      Text("Funded",
+                          style: GoogleFonts.publicSans(
+                              fontWeight: FontWeight.w700)),
                     ],
                   ),
                 ),
@@ -242,124 +272,77 @@ class _MissionFundingPageState extends State<MissionFundingPage> {
             ),
           ),
 
-          const SizedBox(height: 22),
+          const SizedBox(height: 20),
 
-          // -------------------------------------------------
-          // RAISED / GOAL TEXT
-          // -------------------------------------------------
-          Text.rich(
-            TextSpan(
-              text: "₹${widget.data.currentPaid}",
-              style: GoogleFonts.publicSans(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: const Color(0xFF6F3DFA),
-              ),
-              children: [
-                TextSpan(
-                  text: " raised of ₹${widget.data.totalAmount} goal",
-                  style: GoogleFonts.publicSans(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                ),
-              ],
-            ),
-            textAlign: TextAlign.center,
-          ),
-
-          const SizedBox(height: 10),
-
-          // -------------------------------------------------
-          // SUBTEXT
-          // -------------------------------------------------
           Text(
-            "Every contribution brings us closer to a safer neighborhood!",
-            textAlign: TextAlign.center,
+            "₹${data.currentPaid} raised of ₹${data.totalAmount} goal",
             style: GoogleFonts.publicSans(
-              fontSize: 13,
-              height: 1.4,
-              color: Colors.grey.shade600,
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
             ),
-          ),
+          )
         ],
       ),
     );
   }
 
-  // -------------------------------------------------------------
+  // ===================================================================
   // FUNDING HEROES CARD
-  // -------------------------------------------------------------
-  Widget _buildFundingHeroesCard() {
+  // ===================================================================
+  Widget _buildFundingHeroesCard(MissionFundingModel data) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           CupertinoPageRoute(
-            builder: (context) =>
-                FundingHeroesPage(heroesList: widget.data.heroesList),
+            builder: (_) => FundingHeroesPage(heroesList: data.heroesList),
           ),
         );
       },
       child: Container(
-        width: double.infinity,
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: Colors.grey.withOpacity(0.2)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
         ),
         child: Column(
           children: [
-            Text(
-              "Funding Heroes",
-              style: GoogleFonts.publicSans(
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
+            Text("Funding Heroes",
+                style: GoogleFonts.publicSans(
+                    fontSize: 20, fontWeight: FontWeight.w800)),
 
             const SizedBox(height: 16),
 
-            _centeredAvatarStack(),
+            _avatarStack(data),
 
             const SizedBox(height: 14),
             Text(
-              "Join ${widget.data.heroesList.length} other heroes who have already contributed.",
+              "Join ${data.heroesList.length} other heroes who contributed.",
+              textAlign: TextAlign.center,
               style: GoogleFonts.publicSans(
                 fontSize: 13,
                 color: Colors.grey.shade600,
               ),
-              textAlign: TextAlign.center,
-            ),
+            )
           ],
         ),
       ),
     );
   }
 
-  Widget _centeredAvatarStack() {
+  Widget _avatarStack(MissionFundingModel data) {
     const double size = 48;
     const double overlap = 32;
-    final heroes = widget.data.heroesList;
-    final visibleCount = heroes.length >= 3 ? 3 : heroes.length;
-
-    final totalWidth = size + overlap * visibleCount;
+    final heroes = data.heroesList;
+    final visible = heroes.length >= 3 ? 3 : heroes.length;
 
     return SizedBox(
       height: size,
-      width: totalWidth,
+      width: size + overlap * visible,
       child: Stack(
         children: [
-          ...List.generate(visibleCount, (i) {
+          ...List.generate(visible, (i) {
             return Positioned(
               left: overlap * i,
               child: CircleAvatar(
@@ -375,16 +358,14 @@ class _MissionFundingPageState extends State<MissionFundingPage> {
               child: Container(
                 height: size,
                 width: size,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF6F3DFA).withOpacity(0.1),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 2),
-                ),
                 alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFF6F3DFA).withOpacity(0.1),
+                ),
                 child: Text(
                   "${heroes.length - 3}+",
                   style: GoogleFonts.publicSans(
-                    fontSize: 13,
                     fontWeight: FontWeight.bold,
                     color: const Color(0xFF6F3DFA),
                   ),
@@ -396,29 +377,25 @@ class _MissionFundingPageState extends State<MissionFundingPage> {
     );
   }
 
-  // -------------------------------------------------------------
+  // ===================================================================
   // VENDOR BIDS CARD
-  // -------------------------------------------------------------
-  Widget _buildVendorBidsCard() {
-    final vendorBids = widget.data.vendorBids;
+  // ===================================================================
+  Widget _buildVendorBidsCard(MissionFundingModel data) {
+    final bids = data.vendorBids;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              "Vendor Bids",
-              style: GoogleFonts.publicSans(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ],
+        Text(
+          "Vendor Bids",
+          style: GoogleFonts.publicSans(
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+          ),
         ),
         const SizedBox(height: 12),
-        if (vendorBids.isEmpty)
+
+        if (bids.isEmpty)
           Container(
             padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 20),
             decoration: BoxDecoration(
@@ -427,28 +404,13 @@ class _MissionFundingPageState extends State<MissionFundingPage> {
             ),
             child: Column(
               children: [
-                // Gavel/Bidding Icon
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFB0B8C4).withOpacity(0.3),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.gavel_outlined,
-                    size: 32,
-                    color: const Color(0xFF6B7280),
-                  ),
-                ),
+                Icon(Icons.gavel_outlined, size: 36, color: Colors.grey.shade700),
                 const SizedBox(height: 16),
-                Text(
-                  "Awaiting Bids",
-                  style: GoogleFonts.publicSans(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.black,
-                  ),
-                ),
+                Text("Awaiting Bids",
+                    style: GoogleFonts.publicSans(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    )),
                 const SizedBox(height: 8),
                 Text(
                   "Vendors will be invited once funding milestones are reached.",
@@ -456,63 +418,44 @@ class _MissionFundingPageState extends State<MissionFundingPage> {
                   style: GoogleFonts.publicSans(
                     fontSize: 13,
                     color: Colors.black87,
-                    height: 1.4,
                   ),
                 ),
               ],
             ),
           )
         else
-          ...vendorBids.asMap().entries.map((entry) {
+          ...bids.asMap().entries.map((entry) {
             return Padding(
               padding: const EdgeInsets.only(bottom: 16),
-              child: _buildVendorBidCard(entry.value, entry.key),
+              child: _buildVendorBidTile(entry.key, entry.value),
             );
           }),
       ],
     );
   }
 
-  Widget _buildVendorBidCard(VendorBid bid, int index) {
-    final bool isSelected = _selectedVendorIndex == index;
-    final bool isCritical = bid.status == "critical";
-    final bool isRejected = bid.status == "rejected";
-    final bool isConsidered = bid.status == "considered";
+  Widget _buildVendorBidTile(int index, VendorBid bid) {
+    final bool selected = _selectedVendorIndex == index;
 
     return GestureDetector(
       onTap: () {
-        if (bid.status == "considered" ||
-            bid.status == "rejected" ||
-            !widget.data.isMe) {
-          return;
-        }
         setState(() {
-          _selectedVendorIndex = _selectedVendorIndex == index ? null : index;
+          _selectedVendorIndex = selected ? null : index;
         });
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected
-              ? const Color(0xFF6F3DFA).withOpacity(0.08)
-              : Colors.white,
+          color:
+          selected ? const Color(0xFF6F3DFA).withOpacity(0.08) : Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected
+            color: selected
                 ? const Color(0xFF6F3DFA)
-                : isCritical
-                ? Colors.red.withOpacity(0.3)
                 : Colors.grey.withOpacity(0.2),
-            width: isSelected ? 2.5 : 1.5,
+            width: selected ? 2 : 1.4,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
         ),
         child: Column(
           children: [
@@ -524,280 +467,83 @@ class _MissionFundingPageState extends State<MissionFundingPage> {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        bid.vendorName,
-                        style: GoogleFonts.publicSans(
-                          fontSize: 18,
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          const Icon(Icons.star, color: Colors.amber, size: 16),
-                          const SizedBox(width: 4),
-                          Text(
-                            "${bid.rating} (${bid.reviews} reviews)",
-                            style: GoogleFonts.publicSans(
-                              fontSize: 13,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                // Status badge or thumbs up
-                if (isCritical && isSelected)
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.thumb_up_outlined,
-                        color: const Color(0xFF6F3DFA),
-                        size: 20,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        "${bid.thumbsUp}",
-                        style: GoogleFonts.publicSans(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF6F3DFA),
-                        ),
-                      ),
-                    ],
-                  )
-                else if (isRejected)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.red.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.red),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.close, color: Colors.red, size: 16),
-                        const SizedBox(width: 4),
-                        Text(
-                          "Rejected",
-                          style: GoogleFonts.publicSans(
-                            color: Colors.red,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                else if (isConsidered)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.green.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.green),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.check, color: Colors.green, size: 16),
-                        const SizedBox(width: 4),
-                        Text(
-                          "Considered",
-                          style: GoogleFonts.publicSans(
-                            color: Colors.green,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Proposed Bid",
-                        style: GoogleFonts.publicSans(
-                          fontSize: 13,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        "₹${bid.proposedAmount.toStringAsFixed(0)}",
-                        style: GoogleFonts.publicSans(
-                          fontSize: 20,
-                          color: isSelected
-                              ? const Color(0xFF6F3DFA)
-                              : Colors.black,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Estimated Timeline",
-                        style: GoogleFonts.publicSans(
-                          fontSize: 13,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        bid.timeline,
-                        style: GoogleFonts.publicSans(
-                          fontSize: 20,
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            if (isSelected) ...[
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF6F3DFA),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  onPressed: () {},
                   child: Text(
-                    "View Full Proposal",
+                    bid.vendorName,
                     style: GoogleFonts.publicSans(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.red,
-                        side: const BorderSide(color: Colors.red),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                      onPressed: () {},
-                      icon: const Icon(Icons.close, size: 18),
-                      label: Text(
-                        "Reject",
-                        style: GoogleFonts.publicSans(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
+                Text(
+                  bid.timeline,
+                  style: GoogleFonts.publicSans(
+                      fontSize: 14, fontWeight: FontWeight.w600),
+                )
+              ],
+            ),
+
+            const SizedBox(height: 14),
+
+            Row(
+              children: [
+                Text(
+                  "₹${bid.proposedAmount.toStringAsFixed(0)}",
+                  style: GoogleFonts.publicSans(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: selected ? const Color(0xFF6F3DFA) : Colors.black,
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                      onPressed: () {},
-                      icon: const Icon(Icons.check, size: 18),
-                      label: Text(
-                        "Consider",
-                        style: GoogleFonts.publicSans(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                ),
+              ],
+            ),
+
+            if (selected) ...[
+              const SizedBox(height: 14),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF6F3DFA),
+                ),
+                onPressed: () {},
+                child: const Text("View Full Proposal"),
               ),
-            ],
+            ]
           ],
         ),
       ),
     );
   }
 
-  // -------------------------------------------------------------
+  // ===================================================================
   // IMPACT CARD
-  // -------------------------------------------------------------
+  // ===================================================================
   Widget _buildImpactCard() {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: const Color(0xFF6F3DFA).withOpacity(0.06),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF6F3DFA).withOpacity(0.25)),
       ),
       child: Column(
         children: [
-          const Icon(
-            Icons.health_and_safety_outlined,
-            size: 40,
-            color: Color(0xFF6F3DFA),
-          ),
+          const Icon(Icons.health_and_safety_outlined,
+              size: 40, color: Color(0xFF6F3DFA)),
           const SizedBox(height: 10),
-          Text(
-            "Your Impact is Immeasurable",
-            style: GoogleFonts.publicSans(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
+          Text("Your Impact is Immeasurable",
+              style: GoogleFonts.publicSans(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+              )),
+          const SizedBox(height: 6),
+          Text("Every ₹500 prevents an accident.",
+              style: GoogleFonts.publicSans(
+                fontSize: 15,
+                color: Color(0xFF6F3DFA),
+                fontWeight: FontWeight.w600,
+              )),
           const SizedBox(height: 6),
           Text(
-            "Every ₹500 helps prevent an accident.",
-            style: GoogleFonts.publicSans(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF6F3DFA),
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            "Your contribution directly funds materials and labor for a lasting fix, making our roads safer for everyone.",
+            "Your contribution funds materials & labor for long-term fixes.",
             textAlign: TextAlign.center,
             style: GoogleFonts.publicSans(
               fontSize: 13,
@@ -809,73 +555,52 @@ class _MissionFundingPageState extends State<MissionFundingPage> {
     );
   }
 
-  // -------------------------------------------------------------
+  // ===================================================================
   // CONTRIBUTE BUTTON
-  // -------------------------------------------------------------
-  Widget _buildContributeButton(BuildContext context) {
+  // ===================================================================
+  Widget _buildContributeButton(
+      BuildContext context, MissionFundingModel data) {
     return Align(
       alignment: Alignment.bottomCenter,
       child: Container(
         padding: EdgeInsets.only(
           left: 16,
           right: 16,
-          bottom: 16 + MediaQuery.of(context).padding.bottom,
+          bottom: 12 + MediaQuery.of(context).padding.bottom,
           top: 6,
         ),
         decoration: BoxDecoration(
           color: Colors.white.withOpacity(0.9),
           border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.3))),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, -4),
-            ),
-          ],
         ),
         child: SizedBox(
           height: 56,
           width: double.infinity,
-          child: ElevatedButton.icon(
+          child: ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF6F3DFA),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              elevation: 8,
-              shadowColor: const Color(0xFF6F3DFA).withOpacity(0.4),
+              shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             ),
             onPressed: () {
               showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                ),
-                builder: (context) {
-                  return ContributeBottomSheet(
-                    totalGoal: widget.data.totalAmount + 0.0,
-                    fundedAmount: widget.data.currentPaid + 0.0,
-                  );
-                },
-              );
+                  context: context,
+                  isScrollControlled: true,
+                  shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+                  builder: (_) {
+                    return ContributeBottomSheet(
+                      fundedAmount: data.currentPaid.toDouble(),
+                      totalGoal: data.totalAmount.toDouble(),
+                    );
+                  });
             },
-            icon: Icon(
-              widget.data.isMe
-                  ? Icons.rocket_launch
-                  : Icons.volunteer_activism_outlined,
-              size: 20,
-              color: Colors.white,
-            ),
-            label: Text(
-              widget.data.isMe
+            child: Text(
+              data.isMe
                   ? "Initiate Mission Go!"
                   : "Contribute Now & Be a Hero!",
               style: GoogleFonts.publicSans(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
+                  fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ),
         ),
