@@ -176,7 +176,7 @@ class _ReportDescriptionStepState extends State<ReportDescriptionStep> {
                       ? null
                       : () {
                     // TODO: Connect to backend or move to summary screen
-                    Navigator.push(context, CupertinoPageRoute(builder: (_) => IncidentDetailsPage(data: incidentDummy,)));
+                    Navigator.push(context, CupertinoPageRoute(builder: (_) => IncidentDetailsPage()));
                   },
                   child: Text(
                     "Submit",

@@ -23,6 +23,7 @@ class NearbyIssue {
   final Color severityColor;
   final Color severityBg;
   final int progress;
+  final bool isCompleted;
 
   NearbyIssue({
     required this.title,
@@ -31,6 +32,7 @@ class NearbyIssue {
     required this.severityColor,
     required this.severityBg,
     required this.progress,
+    required this.isCompleted,
   });
 }
 
@@ -65,6 +67,7 @@ final nearbyIssues = [
     severityColor: Color(0xFFB91C1C),
     severityBg: Color(0xFFFEE2E2),
     progress: 75,
+    isCompleted: false,
   ),
   NearbyIssue(
     title: "Broken Streetlight at Junction",
@@ -73,7 +76,8 @@ final nearbyIssues = [
     severity: "Medium Severity",
     severityColor: Color(0xFF9A3412),
     severityBg: Color(0xFFFFEDD5),
-    progress: 40,
+    progress: 100,
+    isCompleted: false,
   ),
   NearbyIssue(
     title: "Waste Overflow on Park St.",
@@ -82,6 +86,7 @@ final nearbyIssues = [
     severity: "Low Severity",
     severityColor: Color(0xFF92400E),
     severityBg: Color(0xFFFFF7E6),
-    progress: 15,
+    progress: 100,
+    isCompleted: true,
   ),
 ];

@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'HomeCubit.dart';
+import '../pdp_page/completed_screen.dart';
+import '../pdp_page/generic_view.dart';
 import '../report_journey/report_page.dart';
+import 'HomeCubit.dart';
 import 'home_model.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -19,9 +21,14 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-class _HomeView extends StatelessWidget {
+class _HomeView extends StatefulWidget {
   const _HomeView();
 
+  @override
+  State<_HomeView> createState() => _HomeViewState();
+}
+
+class _HomeViewState extends State<_HomeView> {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<HomeCubit, HomeState>(
@@ -30,8 +37,9 @@ class _HomeView extends StatelessWidget {
 
         if (state is HomeLoading) {
           return Scaffold(
-            backgroundColor:
-            isDark ? const Color(0xFF140F23) : const Color(0xFFF6F5F8),
+            backgroundColor: isDark
+                ? const Color(0xFF140F23)
+                : const Color(0xFFF6F5F8),
             body: const Center(child: CircularProgressIndicator()),
           );
         }
@@ -41,8 +49,9 @@ class _HomeView extends StatelessWidget {
         }
 
         return Scaffold(
-          backgroundColor:
-          isDark ? const Color(0xFF140F23) : const Color(0xFFF6F5F8),
+          backgroundColor: isDark
+              ? const Color(0xFF140F23)
+              : const Color(0xFFF6F5F8),
           body: SafeArea(
             child: RefreshIndicator(
               onRefresh: () => context.read<HomeCubit>().refresh(),
@@ -80,7 +89,7 @@ class _HomeView extends StatelessWidget {
                         return _buildIssueCard(issue, isDark);
                       },
                     ),
-                  )
+                  ),
                 ],
               ),
             ),
@@ -91,7 +100,6 @@ class _HomeView extends StatelessWidget {
   }
 
   // -------------------- UI Helpers ---------------------
-
   Widget _buildTopBar(String locality, bool isDark) {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
@@ -100,8 +108,10 @@ class _HomeView extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.location_on,
-                  color: isDark ? Colors.white : Colors.black),
+              Icon(
+                Icons.location_on,
+                color: isDark ? Colors.white : Colors.black,
+              ),
               const SizedBox(width: 6),
               Text(
                 locality,
@@ -134,7 +144,10 @@ class _HomeView extends StatelessWidget {
   }
 
   Widget _buildCarousel(
-      BuildContext context, List<HomeActionCard> cards, bool isDark) {
+    BuildContext context,
+    List<HomeActionCard> cards,
+    bool isDark,
+  ) {
     return Padding(
       padding: const EdgeInsets.only(top: 16.0),
       child: SizedBox(
@@ -149,24 +162,24 @@ class _HomeView extends StatelessWidget {
             return GestureDetector(
               onTap: () {
                 if (card.id == "report") {
-                  Navigator.push(context,
-                      CupertinoPageRoute(builder: (_) => const ReportPage()));
+                  Navigator.push(
+                    context,
+                    CupertinoPageRoute(builder: (_) => const ReportPage()),
+                  );
                 }
               },
               child: Container(
                 width: 230,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: isDark
-                      ? Colors.white.withOpacity(0.08)
-                      : Colors.white,
+                  color: isDark ? Colors.white.withOpacity(0.08) : Colors.white,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
                       blurRadius: 8,
                       offset: const Offset(0, 3),
                       color: Colors.black.withOpacity(0.05),
-                    )
+                    ),
                   ],
                 ),
                 child: Column(
@@ -185,9 +198,7 @@ class _HomeView extends StatelessWidget {
                       card.subtitle,
                       style: GoogleFonts.publicSans(
                         fontSize: 13,
-                        color: isDark
-                            ? Colors.grey[400]
-                            : Colors.grey[600],
+                        color: isDark ? Colors.grey[400] : Colors.grey[600],
                       ),
                     ),
                     const Spacer(),
@@ -198,8 +209,8 @@ class _HomeView extends StatelessWidget {
                         color: card.isPrimary
                             ? const Color(0xFF6D38FF)
                             : (isDark
-                            ? Colors.white.withOpacity(0.1)
-                            : const Color(0xFFF0F0F0)),
+                                  ? Colors.white.withOpacity(0.1)
+                                  : const Color(0xFFF0F0F0)),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
@@ -211,7 +222,7 @@ class _HomeView extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                    )
+                    ),
                   ],
                 ),
               ),
@@ -223,102 +234,124 @@ class _HomeView extends StatelessWidget {
   }
 
   Widget _buildIssueCard(NearbyIssue issue, bool isDark) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.white.withOpacity(0.08) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-            color: Colors.black.withOpacity(0.05),
-          )
-        ],
-      ),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: Image.network(issue.imageUrl,
-                height: 70, width: 70, fit: BoxFit.cover),
-          ),
-          const SizedBox(width: 14),
+    return GestureDetector(
+      onTap: () {
+        if(issue.progress == 100){
+          Navigator.of(
+            context,
+          ).push(CupertinoPageRoute(builder: (context) => MissionAccomplishedPage()));
 
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  issue.title,
-                  style: GoogleFonts.publicSans(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: isDark ? Colors.white : Colors.black,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Container(
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: issue.severityBg,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    issue.severity,
-                    style: GoogleFonts.publicSans(
-                      fontSize: 11,
-                      color: issue.severityColor,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
+        }else{
+          Navigator.of(
+            context,
+          ).push(CupertinoPageRoute(builder: (context) => MissionFundingPage()));
+        }
 
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(50),
-                  child: LinearProgressIndicator(
-                    value: issue.progress / 100,
-                    minHeight: 6,
-                    color: Colors.green,
-                    backgroundColor:
-                    isDark ? Colors.grey[800] : Colors.grey[300],
-                  ),
-                ),
-
-                const SizedBox(height: 4),
-                Text(
-                  "${issue.progress}% funded",
-                  style: GoogleFonts.publicSans(
-                    fontSize: 11,
-                    color: isDark ? Colors.grey[400] : Colors.grey[600],
-                  ),
-                ),
-              ],
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 14),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: isDark ? Colors.white.withOpacity(0.08) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+              color: Colors.black.withOpacity(0.05),
             ),
-          ),
-
-          const SizedBox(width: 8),
-
-          Container(
-            height: 40,
-            width: 90,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: const Color(0xFF6D38FF).withOpacity(0.25),
+          ],
+        ),
+        child: Row(
+          children: [
+            ClipRRect(
               borderRadius: BorderRadius.circular(10),
-            ),
-            child: Text(
-              "Contribute",
-              style: GoogleFonts.publicSans(
-                color: const Color(0xFF6D38FF),
-                fontWeight: FontWeight.bold,
+              child: Image.network(
+                issue.imageUrl,
+                height: 70,
+                width: 70,
+                fit: BoxFit.cover,
               ),
             ),
-          )
-        ],
+            const SizedBox(width: 14),
+
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    issue.title,
+                    style: GoogleFonts.publicSans(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: issue.severityBg,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      issue.severity,
+                      style: GoogleFonts.publicSans(
+                        fontSize: 11,
+                        color: issue.severityColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(50),
+                    child: LinearProgressIndicator(
+                      value: issue.progress / 100,
+                      minHeight: 6,
+                      color: Colors.green,
+                      backgroundColor: isDark
+                          ? Colors.grey[800]
+                          : Colors.grey[300],
+                    ),
+                  ),
+
+                  const SizedBox(height: 4),
+                  Text(
+                    "${issue.progress}% funded",
+                    style: GoogleFonts.publicSans(
+                      fontSize: 11,
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(width: 8),
+
+            Container(
+              height: 40,
+              width: 90,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: const Color(0xFF6D38FF).withOpacity(0.25),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                "Contribute",
+                style: GoogleFonts.publicSans(
+                  color: const Color(0xFF6D38FF),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

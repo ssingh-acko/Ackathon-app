@@ -52,21 +52,11 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   goToOnboarding(){
-    if(kIsWeb){
-      Navigator.pushReplacement(context, CupertinoPageRoute(builder: (context) => VendorScreen()));
-      return;
-    }
     Navigator.pushReplacement(context, CupertinoPageRoute(builder: (context) => OnboardingScreen()));
   }
 
 
   goToHomePage(){
-    if(kIsWeb){
-      Navigator.pushReplacement(context, CupertinoPageRoute(builder: (context) => VendorScreen()));
-      return;
-    }
-
-
     Navigator.pushReplacement(context, CupertinoPageRoute(builder: (context) => HomeScreen(), settings: RouteSettings(name: 'HomeScreen'),), );
   }
 
