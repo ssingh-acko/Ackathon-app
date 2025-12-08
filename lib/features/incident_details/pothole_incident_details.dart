@@ -16,7 +16,7 @@ class IncidentDetailsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => IncidentDetailsCubit()..fetchIncident(),
+      create: (_) => IncidentDetailsCubit("136e67c6-10dd-41b8-8dc5-3b9b157ec59c"),
       child: const _IncidentDetailsView(),
     );
   }
@@ -30,6 +30,15 @@ class _IncidentDetailsView extends StatefulWidget {
 }
 
 class _IncidentDetailsViewState extends State<_IncidentDetailsView> {
+  IncidentDetailsCubit? cubit;
+
+  @override
+  void initState() {
+    WidgetsBinding.instance.addPostFrameCallback((_){
+      cubit = BlocProvider.of(context);
+    });
+    super.initState();
+  }
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -77,6 +86,8 @@ class _IncidentDetailsViewState extends State<_IncidentDetailsView> {
                 const SizedBox(height: 20),
                 ..._buildImageCards(data),
                 const SizedBox(height: 20),
+                _buildAiAnalysisSection(data, isDark),
+                const SizedBox(height: 20),
                 _buildDangerAndMetaCard(data, isDark),
                 const SizedBox(height: 20),
                 _buildTags(data),
@@ -90,6 +101,265 @@ class _IncidentDetailsViewState extends State<_IncidentDetailsView> {
       ],
     );
   }
+
+  Widget _buildAiAnalysisSection(IncidentReport data, bool isDark) {
+    final ai = data.ai;
+    if (ai == null) return const SizedBox(); // no AI data → hide entire section
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // SECTION HEADER
+        Row(
+          children: [
+            Icon(Icons.auto_awesome,
+                color: const Color(0xFF6F42C1), size: 30),
+            const SizedBox(width: 8),
+            Text(
+              "AI Analysis",
+              style: GoogleFonts.publicSans(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        // ----------------------------------------
+        // SUMMARY / ISSUE ANALYSIS CARD
+        // ----------------------------------------
+        if (ai.issueSummary != null)
+          _aiCard(
+            icon: Icons.campaign,
+            title: "Pothole Analysis",
+            child: Text(
+              ai.issueSummary!,
+              style: GoogleFonts.publicSans(
+                fontSize: 14,
+                color: Colors.grey[700],
+              ),
+            ),
+          ),
+
+        // ----------------------------------------
+        // TECHNICAL NOTES
+        // ----------------------------------------
+        if (ai.technicalNotes != null)
+          _aiCard(
+            icon: Icons.biotech,
+            title: "Technical Diagnosis",
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _techRow("Pothole Type", ai.technicalNotes!.potholeType),
+                _techRow(
+                  "Depth Estimate",
+                  ai.technicalNotes!.depthEstimateCm != null
+                      ? "${ai.technicalNotes!.depthEstimateCm} cm"
+                      : null,
+                ),
+                _techRow(
+                  "Width Spread",
+                  ai.technicalNotes!.widthSpreadM != null
+                      ? "${ai.technicalNotes!.widthSpreadM} m"
+                      : null,
+                ),
+                _techRow(
+                  "Road Type",
+                  ai.technicalNotes!.roadType,
+                ),
+                // _techRow(
+                //   "Structural Condition",
+                //   ai.technicalNotes!.structuralCondition,
+                // ),
+
+                // Risk Amplifiers
+                if (ai.technicalNotes!.riskAmplifiers.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    "Risk Amplifiers",
+                    style: GoogleFonts.publicSans(
+                      fontSize: 13,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Wrap(
+                    spacing: 6,
+                    children: ai.technicalNotes!.riskAmplifiers
+                        .map((e) => Chip(
+                      label: Text(
+                        e,
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                      backgroundColor:
+                      Colors.red.withOpacity(0.1),
+                      labelStyle:
+                      const TextStyle(color: Colors.red),
+                    ))
+                        .toList(),
+                  ),
+                ],
+              ],
+            ),
+          ),
+
+        // ----------------------------------------
+        // IMAGE DESCRIPTIONS
+        // ----------------------------------------
+        if (ai.imageDescriptions.isNotEmpty)
+          ...ai.imageDescriptions.map((img) {
+            return _aiCard(
+              icon: Icons.image,
+              title: "AI Visual Analysis",
+              child: Column(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(img.imageUrl),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    img.description,
+                    style: GoogleFonts.publicSans(
+                      fontSize: 13,
+                      fontStyle: FontStyle.italic,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+
+        // ----------------------------------------
+        // BUDGET ESTIMATION
+        // ----------------------------------------
+        if (ai.estimatedBudget != null || ai.budgetBreakdown != null)
+          _aiCard(
+            icon: Icons.construction,
+            title: "Cost & Material Estimation",
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (ai.estimatedBudget != null)
+                  _techRow("Estimated Budget",
+                      "₹${ai.estimatedBudget!.round()}"),
+
+                if (ai.budgetBreakdown != null) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    "Budget Breakdown:",
+                    style: GoogleFonts.publicSans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    ai.budgetBreakdown!.replaceAll('_', ' '),
+                    style: GoogleFonts.publicSans(
+                      fontSize: 13,
+                      color: Colors.grey[700],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+
+        // ----------------------------------------
+        // RECOMMENDATIONS (if exists)
+        // ----------------------------------------
+        if (ai.recommendations != null)
+          _aiCard(
+            icon: Icons.check_circle,
+            title: "AI Recommendations",
+            child: Text(
+              ai.recommendations!,
+              style: GoogleFonts.publicSans(
+                fontSize: 14,
+                color: Colors.grey[700],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+
+  Widget _aiCard({
+    required IconData icon,
+    required String title,
+    required Widget child,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(icon, color: const Color(0xFF6F42C1)),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  title,
+                  style: GoogleFonts.publicSans(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          child,
+        ],
+      ),
+    );
+  }
+
+  Widget _techRow(String label, String? value) {
+    if (value == null) return const SizedBox();
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(label,
+                style: GoogleFonts.publicSans(
+                  fontSize: 13,
+                  color: Colors.grey[600],
+                )),
+          ),
+          Text(
+            value,
+            style: GoogleFonts.publicSans(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+            textAlign: TextAlign.right,
+          ),
+        ],
+      ),
+    );
+  }
+
 
   Widget _buildTopBar(BuildContext context, bool isDark) {
     return Container(
@@ -319,19 +589,7 @@ class _IncidentDetailsViewState extends State<_IncidentDetailsView> {
           context,
           CupertinoPageRoute(
             builder: (context) => CrowdfundMissionPage(
-              data: CrowdfundMission(
-                missionTitle: "Clean Garbage Dump at Maple Street",
-                images: BeforeAfterImage(
-                  beforeUrl:
-                      "https://lh3.googleusercontent.com/aida-public/AB6AXuC6P2UK5KTB7WxXGwT4SBJ8w3X7jl0vK1qxKq5Ys3y4s44l-p4X6l_ebfy3t1VB1RqFY_JyrX-FdcCOX2EYdLd8YwT4ppmttY1HerhSMUPmPiaTAYOTdx84J8teUx3mIz1zFPeemeVd-FIWXvJAkaBuaVavrF1svx5V_wIAE3xYM08N4hVsT6lslMK_GSJi4gJ7tynV7mCS6V2aF9iUcGNWNq-Cq_BlEwc5v_athoI01Vn2qPOKMBBriIGYXh-wUTVqyQTssy7xwsg",
-                  afterUrl:
-                      "https://lh3.googleusercontent.com/aida-public/AB6AXuDICLJQ1FyojwZbJvtA97hTOOwLSdhwfwBnxIGx9lnoriQGtzmEnYElh21UYPSEVUvzUYr0elrpJ71JMWYR0KhpkDElXWEHe5vo5rVrXZe_Yd0QqYilVq_4nrklsKiJVOtLuovPQoRdagVKljIX26z2ibSsyiK4R9V10QLuT_xXMXASFMmhQY7r6gG2ohN0_KkXuXjdhwqMjwr-PRsvLvfKGnRlxw6loN5A5hyxAmft9ddtmiR-Tb9rhzb545KPIL6boNg6isXGXiM",
-                ),
-                aiBudget: 15000,
-                aiEta: "3 Days",
-                seedRequired: 1500,
-                seedPercent: 10,
-              ),
+              data: cubit!.incidentReport!,
             ),
           ),
         );
