@@ -50,7 +50,7 @@ class _PaymentPageState extends State<PaymentPage> {
 
     // Base options common to both platforms
     var options = <String, dynamic>{
-      'key': '3CMcCR8qqrAickPGD9r6tzj6', // Replace with your Razorpay key
+      'key': 'rzp_test_ROAG3nIO1Nhkzy', // Replace with your Razorpay key
       'amount': (widget.amount * 100)
           .toInt(), // Amount in paise (convert from rupees)
       'name': 'Civic Fix',
@@ -124,7 +124,7 @@ class _PaymentPageState extends State<PaymentPage> {
     debugPrint('Payment Success: ${response.paymentId}');
 
     ///TODO update order status
-    Future.delayed(Duration(seconds: 1), (){Navigator.of(context).pop({"Status": true, "amount": widget.amount, "orderId": widget.orderId});});
+    Future.delayed(Duration(seconds: 1), (){Navigator.of(context).pop({"status": true, "amount": widget.amount, "orderId": widget.orderId});});
   }
 
   void _handlePaymentError(PaymentFailureResponse response) {
@@ -134,7 +134,7 @@ class _PaymentPageState extends State<PaymentPage> {
     });
     debugPrint('Payment Error: ${response.code} - ${response.message}');
     ///TODO update order status as failed
-    Future.delayed(Duration(seconds: 1), (){Navigator.of(context).pop({"Status": false, "amount": widget.amount, "orderId": widget.orderId});});
+    Future.delayed(Duration(seconds: 1), (){Navigator.of(context).pop({"status": false, "amount": widget.amount, "orderId": widget.orderId});});
   }
 
   void _handleExternalWallet(ExternalWalletResponse response) {

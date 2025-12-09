@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'completed_screen.dart';
 import 'contribute_screen.dart';
 import 'cubit.dart';
 import 'funding_heroes_page.dart';
@@ -19,13 +20,14 @@ class MissionFundingParent extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => MissionFundingCubit(issueId),
-      child: const MissionFundingPage(),
+      child:  MissionFundingPage(issueId: issueId,),
     );
   }
 }
 
 class MissionFundingPage extends StatelessWidget {
-  const MissionFundingPage({super.key});
+  final String issueId;
+  const MissionFundingPage({super.key, required this.issueId});
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +44,7 @@ class MissionFundingPage extends StatelessWidget {
         }
 
         if (state is MissionFundingLoaded) {
-          return MissionFundingMain(data: state.data, campaignId: state.campaignId,);
+          return MissionFundingMain(data: state.data, campaignId: state.campaignId, issueId: issueId,);
         }
 
         return const SizedBox();
@@ -57,8 +59,9 @@ class MissionFundingPage extends StatelessWidget {
 class MissionFundingMain extends StatefulWidget {
   final MissionFundingModel data;
   final String? campaignId;
+  final String issueId;
 
-  const MissionFundingMain({super.key, required this.data, this.campaignId});
+  const MissionFundingMain({super.key, required this.data, this.campaignId, required this.issueId});
 
   @override
   State<MissionFundingMain> createState() => _MissionFundingMainState();
@@ -160,40 +163,46 @@ class _MissionFundingMainState extends State<MissionFundingMain> {
 
           Positioned(
             left: 16,
+            right: 16,
             bottom: 20,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: MediaQuery.of(context).size.width,
-                  child: Text(
-                    data.title,
-                    style: GoogleFonts.publicSans(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.location_on,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      data.location,
+            child: Container(
+              width: MediaQuery.sizeOf(context).width,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: MediaQuery.of(context).size.width,
+                    child: Text(
+                      data.title,
                       style: GoogleFonts.publicSans(
-                        fontSize: 14,
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
                         color: Colors.white,
                       ),
                     ),
-                  ],
-                ),
-              ],
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.location_on,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          data.location,
+                          style: GoogleFonts.publicSans(
+                            fontSize: 14,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -694,6 +703,10 @@ class _MissionFundingMainState extends State<MissionFundingMain> {
     );
   }
 
+  refreshPage(){
+      context.read<MissionFundingCubit>().loadMission(widget.issueId);
+  }
+
   // ===================================================================
   // CONTRIBUTE BUTTON
   // ===================================================================
@@ -726,7 +739,11 @@ class _MissionFundingMainState extends State<MissionFundingMain> {
               ),
             ),
             onPressed: () {
-              if((data.isMe && !isFilled())){
+              if((data.isMe && isFilled())){
+                Navigator.push(
+                  context,
+                  CupertinoPageRoute(builder: (_) => MissionAccomplishedPage(issueId: widget.issueId)),
+                );
                 return;
               }
               showModalBottomSheet(
@@ -740,12 +757,13 @@ class _MissionFundingMainState extends State<MissionFundingMain> {
                     fundedAmount: data.currentPaid.toDouble(),
                     totalGoal: data.totalAmount.toDouble(),
                     campaignId: widget.campaignId,
+                    refreshScreen: refreshPage,
                   );
                 },
               );
             },
             child: Text(
-              data.isMe
+              ((data.isMe && isFilled()))
                   ? "Initiate Mission Go!"
                   : "Contribute Now & Be a Hero!",
               style: GoogleFonts.publicSans(

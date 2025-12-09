@@ -8,12 +8,14 @@ class ContributeBottomSheet extends StatefulWidget {
   final double totalGoal;
   final double fundedAmount;
   final campaignId;
+  final VoidCallback refreshScreen;
 
   const ContributeBottomSheet({
     super.key,
     required this.totalGoal,
     required this.fundedAmount,
-    required this.campaignId
+    required this.campaignId,
+    required this.refreshScreen,
   });
 
   @override
@@ -136,6 +138,10 @@ class _ContributeBottomSheetState extends State<ContributeBottomSheet> {
                       PaymentPage(amount: amount, orderId: orderId,)),
                 ).then((response) {
                   if (response != null && response["status"]) {
+                      updatePaymentStatus(response);
+                      Navigator.pop(context);
+                      widget.refreshScreen();
+
 
                   }
                 });
@@ -155,5 +161,30 @@ class _ContributeBottomSheetState extends State<ContributeBottomSheet> {
         ],
       ),
     );
+  }
+
+  updatePaymentStatus(data) async{
+    final status = data["status"];
+    final amount = data["amount"];
+    final orderId = data["orderId"];
+
+    final dio = Dio();
+
+    final url = "http://3.109.152.78:8080/api/v1/payments/orders/status";
+
+    final response = await dio.post(
+      url,
+      options: Options(
+        headers: {
+          "Content-Type": "application/json",
+        },
+      ),
+      data: {
+        "razorpayOrderId": orderId,
+        "status": status ? "PAID" : "FAILED",
+      },
+    );
+
+    return response;
   }
 }

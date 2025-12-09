@@ -21,7 +21,7 @@ class HomeCubit extends Cubit<HomeState> {
 
     final locality = await _getUserLocality();
 
-    final getAllIssuesApi = "http://3.109.152.78:8080/api/v1/issues";
+    final getAllIssuesApi = "http://3.109.152.78:8080/api/v1/issues?page=0&size=100";
     final response = await _dio.get(getAllIssuesApi);
     final data = IssueListResponse.fromJson(response.data);
 
@@ -36,7 +36,7 @@ class HomeCubit extends Cubit<HomeState> {
         status: issue.status,
         severityColor: Color(0xFFB91C1C),
         severityBg: Color(0xFFFEE2E2),
-        progress: (issue.fundedPercentage == 0) ? 75 : issue.fundedPercentage,
+        progress: issue.fundedPercentage,
         isCompleted: false,
       )).toList(),           // same here
     ));

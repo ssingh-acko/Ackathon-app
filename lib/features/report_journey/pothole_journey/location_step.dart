@@ -8,6 +8,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:image/image.dart' as IMG;
 import 'package:mime/mime.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -304,10 +305,13 @@ class _ReportLocationStepState extends State<ReportLocationStep> {
     // }
   }
 
-  uploadImages() async{
+
+
+  Future<List<String>> uploadImages() async {
     Dio dio = Dio();
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
 
+    // 1️⃣ Get signed URLs
     final signedUrlsList = await dio.post(
       'http://3.109.152.78:8080/api/v1/storage/presigned-urls',
       options: Options(
@@ -324,28 +328,85 @@ class _ReportLocationStepState extends State<ReportLocationStep> {
     final List<String> uploadedUrls = [];
     final List imageUrlsList = signedUrlsList.data["data"]["urls"];
 
+    // 2️⃣ Loop & compress + upload
     for (int i = 0; i < widget.imagesList.length; i++) {
       final file = widget.imagesList[i];
 
-      // 1. Read bytes
+      // ---- IMAGE COMPRESSION ----
       final bytes = await file.readAsBytes();
+      IMG.Image? image = IMG.decodeImage(bytes);
+      if (image == null) continue;
 
-      // 2. Upload to S3 (presigned URL)
-      final res = await dio.put(
+      // Resize to max 1080px (prevents very large uploads)
+      final resized = IMG.copyResize(
+        image,
+        width: image.width > 1080 ? 1080 : image.width,
+      );
+
+      // Compress jpeg (70% quality)
+      final compressedBytes = IMG.encodeJpg(resized, quality: 70);
+
+      // ---- UPLOAD TO S3 ----
+      await dio.put(
         imageUrlsList[i]['url'],
-        data: bytes,
+        data: compressedBytes,
         options: Options(
           headers: {
-            HttpHeaders.contentTypeHeader: "text/plain",      // required by your presigned URL
-            HttpHeaders.contentLengthHeader: bytes.length,    // required
+            HttpHeaders.contentTypeHeader: "text/plain",
+            HttpHeaders.contentLengthHeader: compressedBytes.length,
           },
         ),
       );
+
       uploadedUrls.add(imageUrlsList[i]['url']);
     }
 
     return uploadedUrls;
   }
+
+
+  // uploadImages() async{
+  //   Dio dio = Dio();
+  //   SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+  //
+  //   final signedUrlsList = await dio.post(
+  //     'http://3.109.152.78:8080/api/v1/storage/presigned-urls',
+  //     options: Options(
+  //       headers: {
+  //         "X-User-Id": sharedPreferences.getString("userId"),
+  //         'Content-Type': 'application/json',
+  //       },
+  //     ),
+  //     data: {
+  //       "count": widget.imagesList.length,
+  //     },
+  //   );
+  //
+  //   final List<String> uploadedUrls = [];
+  //   final List imageUrlsList = signedUrlsList.data["data"]["urls"];
+  //
+  //   for (int i = 0; i < widget.imagesList.length; i++) {
+  //     final file = widget.imagesList[i];
+  //
+  //     // 1. Read bytes
+  //     final bytes = await file.readAsBytes();
+  //
+  //     // 2. Upload to S3 (presigned URL)
+  //     final res = await dio.put(
+  //       imageUrlsList[i]['url'],
+  //       data: bytes,
+  //       options: Options(
+  //         headers: {
+  //           HttpHeaders.contentTypeHeader: "text/plain",      // required by your presigned URL
+  //           HttpHeaders.contentLengthHeader: bytes.length,    // required
+  //         },
+  //       ),
+  //     );
+  //     uploadedUrls.add(imageUrlsList[i]['url']);
+  //   }
+  //
+  //   return uploadedUrls;
+  // }
 
   // ----------------- Progress bar widgets -----------------
   Widget _bar(int step, {required bool active}) {
