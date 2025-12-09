@@ -50,7 +50,7 @@ class _PaymentPageState extends State<PaymentPage> {
 
     // Base options common to both platforms
     var options = <String, dynamic>{
-      'key': 'rzp_test_ROAG3nIO1Nhkzy', // Replace with your Razorpay key
+      'key': 'rzp_live_ROAHKjSRHp5YdM', // Replace with your Razorpay key
       'amount': (widget.amount * 100)
           .toInt(), // Amount in paise (convert from rupees)
       'name': 'Civic Fix',
