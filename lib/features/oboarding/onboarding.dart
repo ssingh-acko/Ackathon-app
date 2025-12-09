@@ -91,7 +91,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    "Acko CivicFix",
+                    "Acko SafeHood",
                     style: GoogleFonts.publicSans(
                       fontSize: 32,
                       color: Colors.white,
