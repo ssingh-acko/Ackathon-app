@@ -137,11 +137,12 @@ class _ContributeBottomSheetState extends State<ContributeBottomSheet> {
                   MaterialPageRoute(builder: (context) =>
                       PaymentPage(amount: amount, orderId: orderId,)),
                 ).then((response) {
-                  if (response != null && response["status"]) {
+                  if (response != null && response["status"] != null) {
                       updatePaymentStatus(response);
                       Navigator.pop(context);
-                      widget.refreshScreen();
-
+                      if(response["status"]) {
+                        widget.refreshScreen();
+                      }
 
                   }
                 });

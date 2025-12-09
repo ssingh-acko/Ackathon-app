@@ -1,16 +1,14 @@
-import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../incident_details/cubit.dart';
+import '../login/payment_page.dart';
 import '../pdp_page/generic_view.dart';
-import '../pdp_page/pdp_page.dart';
 import 'broadcast_group.dart';
-import 'model/launch_mission_data.dart';
 
 class CrowdfundMissionPage extends StatefulWidget {
   final IncidentReport data;
@@ -32,8 +30,9 @@ class _CrowdfundMissionPageState extends State<CrowdfundMissionPage> {
     final seedRequired = (aiBudget * 0.10).round(); // 10%
 
     return Scaffold(
-      backgroundColor:
-      isDark ? const Color(0xFF140F23) : const Color(0xFFF8F9FA),
+      backgroundColor: isDark
+          ? const Color(0xFF140F23)
+          : const Color(0xFFF8F9FA),
       body: SafeArea(
         child: Column(
           children: [
@@ -52,8 +51,9 @@ class _CrowdfundMissionPageState extends State<CrowdfundMissionPage> {
               child: Row(
                 children: [
                   GestureDetector(
-                      onTap: () => Navigator.pop(context),
-                      child: const Icon(Icons.arrow_back_ios_new, size: 24)),
+                    onTap: () => Navigator.pop(context),
+                    child: const Icon(Icons.arrow_back_ios_new, size: 24),
+                  ),
                   // Expanded(
                   //   child: Text(
                   //     "Mission: Fix Pothole",
@@ -92,7 +92,9 @@ class _CrowdfundMissionPageState extends State<CrowdfundMissionPage> {
                     //------------------- TITLE -------------------
                     Padding(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 16),
+                        horizontal: 16,
+                        vertical: 16,
+                      ),
                       child: Text(
                         d.title.toUpperCase(),
                         style: GoogleFonts.publicSans(
@@ -107,8 +109,10 @@ class _CrowdfundMissionPageState extends State<CrowdfundMissionPage> {
                     //------------------- AI BUDGET ONLY -------------------
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: _buildAiCard("AI Estimated Budget",
-                          aiBudget == 0 ? "N/A" : "₹${aiBudget.round()}"),
+                      child: _buildAiCard(
+                        "AI Estimated Budget",
+                        aiBudget == 0 ? "N/A" : "₹${aiBudget.round()}",
+                      ),
                     ),
 
                     const SizedBox(height: 20),
@@ -126,8 +130,10 @@ class _CrowdfundMissionPageState extends State<CrowdfundMissionPage> {
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(Icons.rocket_launch,
-                                  color: const Color(0xFF6F42C1)),
+                              Icon(
+                                Icons.rocket_launch,
+                                color: const Color(0xFF6F42C1),
+                              ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
@@ -144,7 +150,7 @@ class _CrowdfundMissionPageState extends State<CrowdfundMissionPage> {
                                     const SizedBox(height: 6),
                                     Text(
                                       "To launch this mission, contribute 10% (₹$seedRequired). "
-                                          "This shows commitment and boosts community funding.",
+                                      "This shows commitment and boosts community funding.",
                                       style: GoogleFonts.publicSans(
                                         fontSize: 14,
                                         color: const Color(0xFF6F42C1),
@@ -187,9 +193,10 @@ class _CrowdfundMissionPageState extends State<CrowdfundMissionPage> {
                 height: 55,
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () async{
-                    Dio dio= Dio();
-                    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+                  onPressed: () async {
+                    Dio dio = Dio();
+                    SharedPreferences sharedPreferences =
+                        await SharedPreferences.getInstance();
                     final response = await dio.post(
                       'http://3.109.152.78:8080/api/v1/crowdfunding/campaigns',
                       options: Options(
@@ -201,14 +208,52 @@ class _CrowdfundMissionPageState extends State<CrowdfundMissionPage> {
                       data: {
                         "issueId": widget.data.id,
                         "amountRequired": aiBudget.round().toInt(),
-                        "endDate": DateFormat("yyyy-MM-dd").format(DateTime.now().add(Duration(days: 14))),
+                        "endDate": DateFormat(
+                          "yyyy-MM-dd",
+                        ).format(DateTime.now().add(Duration(days: 14))),
                       },
                     );
 
-                    print("responseisss ${response.data}");
+                    final seedAmount = (aiBudget / 10).round();
+                    final url =
+                        "http://3.109.152.78:8080/api/v1/crowdfunding/campaigns/${response.data["data"]["id"]}/contribute";
 
-                    Navigator.push(context,
-                        CupertinoPageRoute(builder: (_) => MissionFundingParent(issueId: widget.data.id)));
+                    SharedPreferences sharedPrefs =
+                        await SharedPreferences.getInstance();
+
+                    final orderResponse = await dio.post(
+                      url,
+                      data: {"contributionAmount": seedAmount},
+                      options: Options(
+                        headers: {
+                          "X-User-Id": sharedPrefs.getString("userId"),
+                          "Content-Type": "application/json",
+                        },
+                      ),
+                    );
+
+                    String orderId = orderResponse.data["data"]["orderId"];
+
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PaymentPage(
+                          amount: seedAmount + 0.0,
+                          orderId: orderId,
+                        ),
+                      ),
+                    ).then((response) {
+                      if (response != null && response["status"]) {
+                        updatePaymentStatus(response);
+                        Navigator.push(
+                          context,
+                          CupertinoPageRoute(
+                            builder: (_) =>
+                                MissionFundingParent(issueId: widget.data.id),
+                          ),
+                        );
+                      }
+                    });
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF6F42C1),
@@ -231,6 +276,24 @@ class _CrowdfundMissionPageState extends State<CrowdfundMissionPage> {
         ),
       ),
     );
+  }
+
+  updatePaymentStatus(data) async {
+    final status = data["status"];
+    final amount = data["amount"];
+    final orderId = data["orderId"];
+
+    final dio = Dio();
+
+    final url = "http://3.109.152.78:8080/api/v1/payments/orders/status";
+
+    final response = await dio.post(
+      url,
+      options: Options(headers: {"Content-Type": "application/json"}),
+      data: {"razorpayOrderId": orderId, "status": status ? "PAID" : "FAILED"},
+    );
+
+    return response;
   }
 
   //------------------- small reusable card -------------------
@@ -259,10 +322,7 @@ class _CrowdfundMissionPageState extends State<CrowdfundMissionPage> {
               Text(
                 label,
                 textAlign: TextAlign.center,
-                style: GoogleFonts.publicSans(
-                  fontSize: 13,
-                  color: Colors.grey,
-                ),
+                style: GoogleFonts.publicSans(fontSize: 13, color: Colors.grey),
               ),
               const SizedBox(height: 4),
               Text(
