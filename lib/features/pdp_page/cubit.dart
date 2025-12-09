@@ -96,7 +96,7 @@ class MissionFundingCubit extends Cubit<MissionFundingState> {
         heroesList: campaignFundingResponse.data.contributors
             .map(
               (contributor) => HeroContributor(
-                name: contributor.username,
+                name: contributor.firstName + " " + contributor.lastName,
                 imageUrl: 'https://i.pravatar.cc/150?img=60',
                 amount: contributor.contributionAmount.toInt(),
               ),
