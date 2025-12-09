@@ -160,7 +160,7 @@ class IssueItem {
       description: json["description"] ?? "",
       fundedPercentage: percentage.toInt(),
       status: json['status'],
-      imageUrl: '',
+      imageUrl: (json['imageUrls'] != null) ? json['imageUrls'][0] : '',
     );
   }
 }

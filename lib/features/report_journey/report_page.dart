@@ -1,6 +1,7 @@
 import 'package:ackathon/features/report_journey/pothole_journey/camera_step.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class ReportPage extends StatelessWidget {
@@ -254,7 +255,20 @@ class ReportPage extends StatelessWidget {
     final dark = Theme.of(context).brightness == Brightness.dark;
 
     return InkWell(
-      onTap: onTap,
+      onTap: (){
+        if(onTap != null){
+          onTap();
+        }else{
+          Fluttertoast.showToast(
+            msg: "This feature is on the way. Come back soon!",
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            backgroundColor: Colors.black87,
+            textColor: Colors.white,
+            fontSize: 14.0,
+          );
+        }
+      },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(

@@ -53,12 +53,12 @@ class _PaymentPageState extends State<PaymentPage> {
       'key': 'rzp_live_ROAHKjSRHp5YdM', // Replace with your Razorpay key
       'amount': (widget.amount * 100)
           .toInt(), // Amount in paise (convert from rupees)
-      'name': 'Civic Fix',
+      'name': 'Acko SafeHood',
       'description': 'Payment',
       'prefill': {
-        'contact': '+916354072132',
-        'email': 'alind.sharma@acko.tech',
-        'name': 'Alind Sharma',
+        'contact': '+91889293085',
+        'email': 'rahul.devanavar@acko.tech',
+        'name': 'Rahul Devanavar',
       },
       'theme': {
         //purple color
@@ -81,11 +81,11 @@ class _PaymentPageState extends State<PaymentPage> {
       // Android-specific: Add UPI options
       options['description'] = 'UPI Payment';
       options['prefill'] = {
-        'contact': '+916354072132',
-        'email': 'alind.sharma@acko.tech',
-        'mobile': '+916354072132',
-        'phone': '+916354072132',
-        'name': 'Alind Sharma',
+        'contact': '+91889293085',
+        'email': 'rahul.devanavar@acko.tech',
+        'mobile': '+91889293085',
+        'phone': '+91889293085',
+        'name': 'Rahul Devanavar',
       };
       options['external'] = {
         'wallets': ['upi'], // Enable UPI payment method (Android only)

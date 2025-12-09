@@ -266,7 +266,7 @@ class _HomeViewState extends State<_HomeView> with RouteAware {
   }
 
   // -------------------- ISSUE CARD ---------------------
-  Widget _buildIssueCard(NearbyIssue issue, bool isDark) {
+  Widget _buildIssueCard(NearbyIssue issue, bool isDark, bool showContributeIcon) {
     return GestureDetector(
       onTap: () {
         if (issue.status == 'COMPLETED') {
@@ -366,6 +366,7 @@ class _HomeViewState extends State<_HomeView> with RouteAware {
 
             const SizedBox(width: 8),
 
+            showContributeIcon ?
             Container(
               height: 40,
               width: 90,
@@ -381,7 +382,7 @@ class _HomeViewState extends State<_HomeView> with RouteAware {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-            ),
+            ):Container(height: 40, width: 80,),
           ],
         ),
       ),
@@ -398,7 +399,7 @@ class _HomeViewState extends State<_HomeView> with RouteAware {
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       itemCount: filtered.length,
-      itemBuilder: (context, i) => _buildIssueCard(filtered[i], isDark),
+      itemBuilder: (context, i) => _buildIssueCard(filtered[i], isDark, true),
     );
   }
 
@@ -412,7 +413,7 @@ class _HomeViewState extends State<_HomeView> with RouteAware {
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       itemCount: filtered.length,
-      itemBuilder: (context, i) => _buildIssueCard(filtered[i], isDark),
+      itemBuilder: (context, i) => _buildIssueCard(filtered[i], isDark, false),
     );
   }
 

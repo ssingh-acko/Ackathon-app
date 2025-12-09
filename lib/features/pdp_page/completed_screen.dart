@@ -331,28 +331,28 @@ class _MissionAccomplishedViewState extends State<_MissionAccomplishedView> {
               },
             ),
           ),
-          const SizedBox(height: 12),
-          SizedBox(
-            height: 52,
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Color(0xFF6F3DFA)),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              icon: const Icon(Icons.rate_review, color: Color(0xFF6F3DFA)),
-              label: Text(
-                "Thank the Vendor",
-                style: GoogleFonts.publicSans(
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF6F3DFA),
-                ),
-              ),
-              onPressed: () {},
-            ),
-          ),
+          // const SizedBox(height: 12),
+          // SizedBox(
+          //   height: 52,
+          //   width: double.infinity,
+          //   child: OutlinedButton.icon(
+          //     style: OutlinedButton.styleFrom(
+          //       side: const BorderSide(color: Color(0xFF6F3DFA)),
+          //       shape: RoundedRectangleBorder(
+          //         borderRadius: BorderRadius.circular(12),
+          //       ),
+          //     ),
+          //     icon: const Icon(Icons.rate_review, color: Color(0xFF6F3DFA)),
+          //     label: Text(
+          //       "Thank the Vendor",
+          //       style: GoogleFonts.publicSans(
+          //         fontWeight: FontWeight.bold,
+          //         color: const Color(0xFF6F3DFA),
+          //       ),
+          //     ),
+          //     onPressed: () {},
+          //   ),
+          // ),
         ],
       ),
     );

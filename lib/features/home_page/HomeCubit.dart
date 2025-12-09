@@ -14,10 +14,10 @@ class HomeCubit extends Cubit<HomeState> {
     'WORK_IN_PROGRESS',
     'COMPLETED'];
 
-  Future<void> loadHomeData() async {
+  Future<void> loadHomeData({bool showLoader = true}) async {
+    if(showLoader)
     emit(HomeLoading());
 
-    await Future.delayed(const Duration(milliseconds: 500)); // Simulate API
 
     final locality = await _getUserLocality();
 
@@ -43,8 +43,7 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   Future<void> refresh() async {
-    await Future.delayed(const Duration(milliseconds: 700));
-    await loadHomeData();
+    await loadHomeData(showLoader: false);
   }
 
   Future<String> _getUserLocality() async {
