@@ -4,6 +4,7 @@ import 'features/incident_details/pothole_incident_details.dart';
 import 'features/login/login_page.dart';
 import 'features/oboarding/onboarding.dart';
 import 'features/report_journey/pothole_journey/desc_step.dart';
+final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
 
 void main() {
   runApp(const MyApp());
@@ -17,6 +18,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: SplashScreen(),
+      navigatorObservers: [routeObserver],
     );
   }
 }

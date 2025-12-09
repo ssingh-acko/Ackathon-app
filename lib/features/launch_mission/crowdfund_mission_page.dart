@@ -1,7 +1,11 @@
 import 'dart:async';
+import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../incident_details/cubit.dart';
 import '../pdp_page/generic_view.dart';
 import '../pdp_page/pdp_page.dart';
@@ -183,7 +187,26 @@ class _CrowdfundMissionPageState extends State<CrowdfundMissionPage> {
                 height: 55,
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async{
+                    Dio dio= Dio();
+                    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+                    final response = await dio.post(
+                      'http://3.109.152.78:8080/api/v1/crowdfunding/campaigns',
+                      options: Options(
+                        headers: {
+                          'X-User-Id': sharedPreferences.getString("userId"),
+                          'Content-Type': 'application/json',
+                        },
+                      ),
+                      data: {
+                        "issueId": widget.data.id,
+                        "amountRequired": aiBudget.round().toInt(),
+                        "endDate": DateFormat("yyyy-MM-dd").format(DateTime.now().add(Duration(days: 14))),
+                      },
+                    );
+
+                    print("responseisss ${response.data}");
+
                     Navigator.push(context,
                         CupertinoPageRoute(builder: (_) => MissionFundingParent(issueId: widget.data.id)));
                   },
@@ -230,11 +253,12 @@ class _CrowdfundMissionPageState extends State<CrowdfundMissionPage> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
                 label,
+                textAlign: TextAlign.center,
                 style: GoogleFonts.publicSans(
                   fontSize: 13,
                   color: Colors.grey,
@@ -243,6 +267,7 @@ class _CrowdfundMissionPageState extends State<CrowdfundMissionPage> {
               const SizedBox(height: 4),
               Text(
                 value,
+                textAlign: TextAlign.center,
                 style: GoogleFonts.publicSans(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,

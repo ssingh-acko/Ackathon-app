@@ -6,17 +6,20 @@ import 'package:google_fonts/google_fonts.dart';
 import '../launch_mission/crowdfund_mission_page.dart';
 import '../launch_mission/model/launch_mission_data.dart';
 import 'cubit.dart';
+import 'error_view.dart';
+import 'loader.dart';
 import 'model/incident_detail_model.dart';
 
 // PAGE (REFAC TO CUBIT)
 // ------------------------------------------------------------
 class IncidentDetailsPage extends StatelessWidget {
-  const IncidentDetailsPage({super.key});
+  final String issueId;
+  const IncidentDetailsPage({super.key, required this.issueId});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => IncidentDetailsCubit("136e67c6-10dd-41b8-8dc5-3b9b157ec59c"),
+      create: (_) => IncidentDetailsCubit(issueId),
       child: const _IncidentDetailsView(),
     );
   }
@@ -49,11 +52,11 @@ class _IncidentDetailsViewState extends State<_IncidentDetailsView> {
         child: BlocBuilder<IncidentDetailsCubit, IncidentDetailsState>(
           builder: (context, state) {
             if (state is IncidentLoading) {
-              return const Center(child: CircularProgressIndicator());
+              return AIDetectionProgressPage();
             }
 
             if (state is IncidentError) {
-              return Center(child: Text(state.message));
+              return MissionErrorPage();
             }
 
             if (state is IncidentLoaded) {
@@ -408,14 +411,14 @@ class _IncidentDetailsViewState extends State<_IncidentDetailsView> {
             color: isDark ? Colors.white : Colors.black87,
           ),
         ),
-        const SizedBox(height: 6),
-        Text(
-          "Reported by: ${data.reporterName}",
-          style: GoogleFonts.publicSans(
-            fontSize: 14,
-            color: isDark ? Colors.grey[300] : Colors.grey[600],
-          ),
-        ),
+        // const SizedBox(height: 6),
+        // Text(
+        //   "Reported by: ${data.reporterName}",
+        //   style: GoogleFonts.publicSans(
+        //     fontSize: 14,
+        //     color: isDark ? Colors.grey[300] : Colors.grey[600],
+        //   ),
+        // ),
       ],
     );
   }
@@ -426,11 +429,13 @@ class _IncidentDetailsViewState extends State<_IncidentDetailsView> {
       children: [
         const Icon(Icons.location_on, color: Colors.purple),
         const SizedBox(width: 4),
-        Text(
-          data.address,
-          style: GoogleFonts.publicSans(
-            color: Colors.purple,
-            fontWeight: FontWeight.w600,
+        Expanded(
+          child: Text(
+            data.address,
+            style: GoogleFonts.publicSans(
+              color: Colors.purple,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ],
@@ -460,17 +465,17 @@ class _IncidentDetailsViewState extends State<_IncidentDetailsView> {
               ),
               child: Image.network(data.imageUrls[i], fit: BoxFit.cover),
             ),
-            Padding(
-              padding: const EdgeInsets.all(14),
-              child: Text(
-                '"${data.imageCaptions[i]}"',
-                style: GoogleFonts.publicSans(
-                  fontStyle: FontStyle.italic,
-                  fontSize: 14,
-                  color: Colors.grey[600],
-                ),
-              ),
-            ),
+            // Padding(
+            //   padding: const EdgeInsets.all(14),
+            //   child: Text(
+            //     '"${data.imageCaptions[i]}"',
+            //     style: GoogleFonts.publicSans(
+            //       fontStyle: FontStyle.italic,
+            //       fontSize: 14,
+            //       color: Colors.grey[600],
+            //     ),
+            //   ),
+            // ),
           ],
         ),
       );

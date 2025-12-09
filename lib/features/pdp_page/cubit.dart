@@ -18,8 +18,9 @@ class MissionFundingLoading extends MissionFundingState {}
 
 class MissionFundingLoaded extends MissionFundingState {
   final MissionFundingModel data;
+  final String? campaignId;
 
-  MissionFundingLoaded(this.data);
+  MissionFundingLoaded(this.data, this.campaignId);
 }
 
 class MissionFundingError extends MissionFundingState {
@@ -34,6 +35,7 @@ class MissionFundingError extends MissionFundingState {
 class MissionFundingCubit extends Cubit<MissionFundingState> {
   final Dio _dio = Dio();
   final String issueId;
+  String? campaignId;
 
   MissionFundingCubit(this.issueId) : super(MissionFundingInitial()) {
     loadMission(issueId);
@@ -61,7 +63,7 @@ class MissionFundingCubit extends Cubit<MissionFundingState> {
     );
     CampaignFundingResponse? campaignFundingResponse =
         CampaignFundingResponse.fromJson(contributorResponse.data);
-
+    campaignId = campaignFundingResponse.data.id;
     final String myUserId = (await SharedPreferences.getInstance()).getString(
       'userId',
     )!;
@@ -102,7 +104,7 @@ class MissionFundingCubit extends Cubit<MissionFundingState> {
 
       // await Future.delayed(const Duration(milliseconds: 600));
 
-      emit(MissionFundingLoaded(model));
+      emit(MissionFundingLoaded(model, campaignId));
     } catch (e) {
       emit(MissionFundingError("Failed to load mission"));
     }

@@ -36,7 +36,7 @@ class HomeCubit extends Cubit<HomeState> {
         status: issue.status,
         severityColor: Color(0xFFB91C1C),
         severityBg: Color(0xFFFEE2E2),
-        progress: (issue.fundedPercentage == 0) ? 75 : 0,
+        progress: (issue.fundedPercentage == 0) ? 75 : issue.fundedPercentage,
         isCompleted: false,
       )).toList(),           // same here
     ));

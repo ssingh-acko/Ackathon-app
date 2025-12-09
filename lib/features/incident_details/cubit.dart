@@ -1,4 +1,6 @@
 // ------------------------------------------------------------
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -26,27 +28,49 @@ class IncidentError extends IncidentDetailsState {
 class IncidentDetailsCubit extends Cubit<IncidentDetailsState> {
   final Dio _dio = Dio();
   final String issueId;
+  Timer? _retryTimer;
   IncidentReport? incidentReport;
   IncidentDetailsCubit(this.issueId) : super(IncidentInitial()){
     fetchIncident(issueId);
+  }
+
+  @override
+  Future<void> close() {
+    _retryTimer?.cancel();
+    return super.close();
   }
 
   Future<void> fetchIncident(String issueId) async {
     emit(IncidentLoading());
 
     try {
-      final incidentUrl = "http://3.109.152.78:8080/api/v1/issues/$issueId";
-      final response = await _dio.get(incidentUrl);
+      final url = "http://3.109.152.78:8080/api/v1/issues/$issueId";
+      final response = await _dio.get(url);
 
-      if (response.statusCode == 200 && response.data["success"] == true) {
+      if (response.statusCode == 200 && response.data["success"] == true && response.data["data"]["status"] == "ACCEPTED") {
+        _retryTimer?.cancel(); // stop retrying
         incidentReport = IncidentReport.fromJson(response.data);
         emit(IncidentLoaded(incidentReport!));
+      } else if(response.statusCode == 200 && response.data["success"] == true && response.data["data"]["status"] == "REJECTED"){
+        emit(IncidentError("Wrong photo for pothole found"));
       } else {
-        emit(IncidentError("Failed to load: Server returned error"));
+        _scheduleRetry(issueId);
       }
     } catch (e) {
+      _scheduleRetry(issueId);
       emit(IncidentError("Error: $e"));
     }
+  }
+
+  // ----------------------------------------------------------
+  // Retry function (runs every 1 second until success)
+  // ----------------------------------------------------------
+  void _scheduleRetry(String issueId) {
+    _retryTimer?.cancel();
+
+    _retryTimer = Timer(const Duration(seconds: 1), () {
+      fetchIncident(issueId); // retry again
+    });
   }
 
 }
@@ -178,7 +202,7 @@ Color _dangerColor(String level) {
     case "LOW":
       return Colors.green;
     default:
-      return Colors.grey;
+      return Colors.red;
   }
 }
 

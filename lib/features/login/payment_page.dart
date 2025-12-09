@@ -5,7 +5,8 @@ import 'package:share_plus/share_plus.dart';
 
 class PaymentPage extends StatefulWidget {
   final double amount;
-  const PaymentPage({super.key, required this.amount});
+  final String? orderId;
+  const PaymentPage({super.key, required this.amount, required this.orderId});
 
   @override
   State<PaymentPage> createState() => _PaymentPageState();
@@ -49,7 +50,7 @@ class _PaymentPageState extends State<PaymentPage> {
 
     // Base options common to both platforms
     var options = <String, dynamic>{
-      'key': 'rzp_test_1DP5mmOlF5G5ag', // Replace with your Razorpay key
+      'key': '3CMcCR8qqrAickPGD9r6tzj6', // Replace with your Razorpay key
       'amount': (widget.amount * 100)
           .toInt(), // Amount in paise (convert from rupees)
       'name': 'Civic Fix',
@@ -85,10 +86,6 @@ class _PaymentPageState extends State<PaymentPage> {
         'mobile': '+916354072132',
         'phone': '+916354072132',
         'name': 'Alind Sharma',
-        'upi_id': '6354072132@superyes',
-        'upi_type': 'pay',
-        'upi_name': 'Alind Sharma',
-        'upi_address': '6354072132@superyes',
       };
       options['external'] = {
         'wallets': ['upi'], // Enable UPI payment method (Android only)
@@ -125,14 +122,9 @@ class _PaymentPageState extends State<PaymentPage> {
       isLoading = false;
     });
     debugPrint('Payment Success: ${response.paymentId}');
-    // ScaffoldMessenger.of(context).showSnackBar(
-    //   const SnackBar(
-    //     content: Text('Payment Successful'),
-    //     backgroundColor: Colors.green,
-    //   ),
-    // );
-    // Optionally navigate back or to another page
-    // Navigator.of(context).pop();
+
+    ///TODO update order status
+    Future.delayed(Duration(seconds: 1), (){Navigator.of(context).pop({"Status": true, "amount": widget.amount, "orderId": widget.orderId});});
   }
 
   void _handlePaymentError(PaymentFailureResponse response) {
@@ -141,7 +133,8 @@ class _PaymentPageState extends State<PaymentPage> {
       isLoading = false;
     });
     debugPrint('Payment Error: ${response.code} - ${response.message}');
-    Navigator.of(context).pop();
+    ///TODO update order status as failed
+    Future.delayed(Duration(seconds: 1), (){Navigator.of(context).pop({"Status": false, "amount": widget.amount, "orderId": widget.orderId});});
   }
 
   void _handleExternalWallet(ExternalWalletResponse response) {
@@ -172,7 +165,7 @@ class _PaymentPageState extends State<PaymentPage> {
             colors: [Color(0xFF8B5CF6), Color(0xFF7C3AED)],
           ),
         ),
-        child: !isPaymentSuccess
+        child: isPaymentSuccess
             ? Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -192,17 +185,6 @@ class _PaymentPageState extends State<PaymentPage> {
                     Text(
                       'Thank you for your contribution!',
                       style: TextStyle(color: Colors.white, fontSize: 16),
-                    ),
-                    SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: () {
-                        SharePlus.instance.share(
-                          ShareParams(
-                            text: 'Can you help me with this mission?',
-                          ),
-                        );
-                      },
-                      child: Text('Share'),
                     ),
                   ],
                 ),

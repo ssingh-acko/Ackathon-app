@@ -152,7 +152,7 @@ class IssueItem {
   });
 
   factory IssueItem.fromJson(Map<String, dynamic> json) {
-    double percentage = json["crowdfundingCampaign"] != null ? (json["crowdfundingCampaign"]['amountCollected'] / json["crowdfundingCampaign"]['amountRequired']) : 0;
+    double percentage = (json["crowdfundingCampaign"] != null ? (json["crowdfundingCampaign"]['amountCollected'] / json["crowdfundingCampaign"]['amountRequired']) : 0) * 100.0;
     return IssueItem(
       id: json["id"] ?? "",
       reporterId: json["reporterId"] ?? "",

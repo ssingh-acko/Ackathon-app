@@ -42,7 +42,7 @@ class MissionFundingPage extends StatelessWidget {
         }
 
         if (state is MissionFundingLoaded) {
-          return MissionFundingMain(data: state.data);
+          return MissionFundingMain(data: state.data, campaignId: state.campaignId,);
         }
 
         return const SizedBox();
@@ -56,8 +56,9 @@ class MissionFundingPage extends StatelessWidget {
 // ===================================================================
 class MissionFundingMain extends StatefulWidget {
   final MissionFundingModel data;
+  final String? campaignId;
 
-  const MissionFundingMain({super.key, required this.data});
+  const MissionFundingMain({super.key, required this.data, this.campaignId});
 
   @override
   State<MissionFundingMain> createState() => _MissionFundingMainState();
@@ -718,13 +719,16 @@ class _MissionFundingMainState extends State<MissionFundingMain> {
           width: double.infinity,
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF6F3DFA),
+              backgroundColor: (data.isMe && !isFilled()) ? Colors.grey : Color(0xFF6F3DFA),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
             ),
             onPressed: () {
+              if((data.isMe && !isFilled())){
+                return;
+              }
               showModalBottomSheet(
                 context: context,
                 isScrollControlled: true,
@@ -735,6 +739,7 @@ class _MissionFundingMainState extends State<MissionFundingMain> {
                   return ContributeBottomSheet(
                     fundedAmount: data.currentPaid.toDouble(),
                     totalGoal: data.totalAmount.toDouble(),
+                    campaignId: widget.campaignId,
                   );
                 },
               );
@@ -753,5 +758,12 @@ class _MissionFundingMainState extends State<MissionFundingMain> {
         ),
       ),
     );
+  }
+
+  isFilled(){
+    if(_selectedVendorIndex == null || widget.data.fundedPercent != 100){
+      return false;
+    }
+    return true;
   }
 }
