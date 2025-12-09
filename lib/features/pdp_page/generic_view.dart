@@ -1365,7 +1365,7 @@ class _MissionFundingMainState extends State<MissionFundingMain> {
           : 'Work in progress';
     }
 
-    return "Contribute & launch a mission";
+    return "Support the Mission";
   }
 
   ///Contribute & launch a mission
