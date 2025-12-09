@@ -616,7 +616,7 @@ class _IncidentDetailsViewState extends State<_IncidentDetailsView> {
               ),
               child: Center(
                 child: Text(
-                  "Let's fix this",
+                  "Create a mission",
                   style: GoogleFonts.publicSans(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,

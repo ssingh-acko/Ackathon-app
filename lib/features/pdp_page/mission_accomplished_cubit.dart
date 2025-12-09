@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../incident_details/cubit.dart';
 import 'model/MissionAccomplishedModel.dart';
 import 'model/campaign_contributor_model.dart';
+import 'model/mission_status_response.dart';
 
 class MissionAccomplishedState {}
 
@@ -23,9 +24,21 @@ class MissionAccomplishedError extends MissionAccomplishedState {
 class MissionAccomplishedCubit extends Cubit<MissionAccomplishedState> {
   MissionAccomplishedCubit() : super(MissionAccomplishedLoading());
   final Dio _dio = Dio();
+  String? fixedImage;
 
   Future<void> loadMission(String issueId) async {
     emit(MissionAccomplishedLoading());
+    final milestoneUrl =
+        "http://3.109.152.78:8080/api/v1/milestones/issue/$issueId";
+
+    final milestoneResponse = await _dio.get(milestoneUrl);
+
+    final milestoneResponseModel = MissionStatusResponse.fromJson(milestoneResponse.data);
+
+    fixedImage = milestoneResponseModel.data.where((element) {
+      return element.status.compareTo("COMPLETED") == 0;
+    }).first.imageUrls.first;
+
     final incidentUrl = "http://3.109.152.78:8080/api/v1/issues/$issueId";
     final incidentResponse = await _dio.get(incidentUrl);
     final contributorUrl =
@@ -39,7 +52,7 @@ class MissionAccomplishedCubit extends Cubit<MissionAccomplishedState> {
     );
     try {
 
-      final data = MissionAccomplishedModel(issueId: incidentReport.id, title: incidentReport.title, description: "From a dangerous pothole to a perfectly repaired surface—thanks to community support.", beforeImage: incidentReport.imageUrls.first, afterImage: "https://lh3.googleusercontent.com/aida-public/AB6AXuBY_erWtkTlDgL5J5OLHcFIyBCc1GKEU5p39_Sah6c_S3TXp2kA4h02vHfXu7OnF7hspMfAVM5uRNoVJXWAJe_HhXSbSIc_iIeYp8KCRG8_8Xjk4yym_xfhlB5A01noLKQbT2Zcymmlloarag242R-iF-qWCxplM6y30AXncTpW6BYye3dp6aakwvguQmeY-5vaGlwycp5Y02VYDnj8fl3olADYTCLgkhld_M5s3v6lQ2FZMXJYLWIV6bK60d6c995B6uiPFOxBf4c", totalFunders: campaignFundingResponse.data.contributors.length, vendorName: 'Sharan');
+      final data = MissionAccomplishedModel(issueId: incidentReport.id, title: incidentReport.title, description: "From a dangerous pothole to a perfectly repaired surface—thanks to community support.", beforeImage: incidentReport.imageUrls.first, afterImage: fixedImage!, totalFunders: campaignFundingResponse.data.contributors.length, vendorName: 'Sharan');
 
       emit(MissionAccomplishedLoaded(data));
     } catch (e) {

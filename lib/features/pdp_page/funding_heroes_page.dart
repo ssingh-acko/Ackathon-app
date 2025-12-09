@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
-
 import 'model/pdp_page_model.dart';
 
 class FundingHeroesPage extends StatelessWidget {
   final List<HeroContributor> heroesList;
   const FundingHeroesPage({super.key, required this.heroesList});
 
+  String _initials(String name) {
+    final parts = name.trim().split(" ");
+    if (parts.length == 1) return parts[0][0].toUpperCase();
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       appBar: AppBar(
         title: const Text("Funding Heroes"),
@@ -17,12 +21,15 @@ class FundingHeroesPage extends StatelessWidget {
         foregroundColor: Colors.black,
       ),
       backgroundColor: const Color(0xFFF7F7FA),
+
       body: ListView.separated(
         padding: const EdgeInsets.all(16),
         itemCount: heroesList.length,
         separatorBuilder: (_, __) => const SizedBox(height: 14),
+
         itemBuilder: (context, index) {
           final c = heroesList[index];
+          final initials = _initials(c.name);
 
           return Container(
             padding: const EdgeInsets.all(16),
@@ -37,13 +44,24 @@ class FundingHeroesPage extends StatelessWidget {
                 ),
               ],
             ),
+
             child: Row(
               children: [
                 CircleAvatar(
                   radius: 28,
-                  backgroundImage: NetworkImage(c.imageUrl),
+                  backgroundColor: const Color(0xFF6F3DFA).withOpacity(0.12),
+                  child: Text(
+                    initials,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                      color: Color(0xFF6F3DFA),
+                    ),
+                  ),
                 ),
+
                 const SizedBox(width: 16),
+
                 Expanded(
                   child: Text(
                     c.name,
@@ -54,6 +72,7 @@ class FundingHeroesPage extends StatelessWidget {
                     ),
                   ),
                 ),
+
                 Text(
                   "₹${c.amount}",
                   style: const TextStyle(

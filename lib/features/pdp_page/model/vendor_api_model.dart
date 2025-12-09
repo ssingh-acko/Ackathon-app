@@ -85,7 +85,7 @@ class VendorBidsData {
 }
 
 class VendorBidItem {
-  final int id;
+  final String id;
   final int serviceProviderId;
   final String serviceProviderName;
   final String issueId;
@@ -97,6 +97,7 @@ class VendorBidItem {
   final String whyChooseTeam;
   final String createdAt;
   final String updatedAt;
+  final String expectedTimeOfCompletion;
 
   VendorBidItem({
     required this.id,
@@ -111,11 +112,12 @@ class VendorBidItem {
     required this.whyChooseTeam,
     required this.createdAt,
     required this.updatedAt,
+    required this.expectedTimeOfCompletion,
   });
 
   factory VendorBidItem.fromJson(Map<String, dynamic> json) {
     return VendorBidItem(
-      id: json["id"],
+      id: json["id"].toString(),
       serviceProviderId: json["serviceProviderId"],
       serviceProviderName: json["serviceProviderName"] ?? "",
       issueId: json["issueId"] ?? "",
@@ -127,6 +129,7 @@ class VendorBidItem {
       whyChooseTeam: json["whyChooseTeam"] ?? "",
       createdAt: json["createdAt"] ?? "",
       updatedAt: json["updatedAt"] ?? "",
+      expectedTimeOfCompletion: json["expectedTimeOfCompletion"] ?? ""
     );
   }
 

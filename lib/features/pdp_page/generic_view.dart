@@ -1,14 +1,20 @@
+import 'dart:io';
 import 'dart:ui';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'completed_screen.dart';
 import 'contribute_screen.dart';
 import 'cubit.dart';
 import 'funding_heroes_page.dart';
+import 'model/mission_status_response.dart';
 import 'model/pdp_page_model.dart';
 
 class MissionFundingParent extends StatelessWidget {
@@ -20,13 +26,14 @@ class MissionFundingParent extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => MissionFundingCubit(issueId),
-      child:  MissionFundingPage(issueId: issueId,),
+      child: MissionFundingPage(issueId: issueId),
     );
   }
 }
 
 class MissionFundingPage extends StatelessWidget {
   final String issueId;
+
   const MissionFundingPage({super.key, required this.issueId});
 
   @override
@@ -44,7 +51,11 @@ class MissionFundingPage extends StatelessWidget {
         }
 
         if (state is MissionFundingLoaded) {
-          return MissionFundingMain(data: state.data, campaignId: state.campaignId, issueId: issueId,);
+          return MissionFundingMain(
+            data: state.data,
+            campaignId: state.campaignId,
+            issueId: issueId,
+          );
         }
 
         return const SizedBox();
@@ -61,14 +72,19 @@ class MissionFundingMain extends StatefulWidget {
   final String? campaignId;
   final String issueId;
 
-  const MissionFundingMain({super.key, required this.data, this.campaignId, required this.issueId});
+  const MissionFundingMain({
+    super.key,
+    required this.data,
+    this.campaignId,
+    required this.issueId,
+  });
 
   @override
   State<MissionFundingMain> createState() => _MissionFundingMainState();
 }
 
 class _MissionFundingMainState extends State<MissionFundingMain> {
-  int? _selectedVendorIndex;
+  String? _selectedVendorId;
 
   @override
   Widget build(BuildContext context) {
@@ -76,45 +92,145 @@ class _MissionFundingMainState extends State<MissionFundingMain> {
 
     return WillPopScope(
       onWillPop: () async {
-        Navigator.popUntil(context, (route) => route.settings.name == "HomeScreen");
+        Navigator.popUntil(
+          context,
+          (route) => route.settings.name == "HomeScreen",
+        );
         return Future.value(false);
       },
-      child: Scaffold(
-        backgroundColor: const Color(0xFFF7F7FA),
-        body: Stack(
-          children: [
-            SingleChildScrollView(
-              padding: const EdgeInsets.only(bottom: 100),
-              child: Column(
-                children: [
-                  _buildHeader(context, data),
-                  const SizedBox(height: 16),
+      child: RefreshIndicator(
+        onRefresh: () async {
+          refreshPage();
+        },
+        child: Scaffold(
+          backgroundColor: const Color(0xFFF7F7FA),
+          body: Stack(
+            children: [
+              SingleChildScrollView(
+                padding: const EdgeInsets.only(bottom: 100),
+                child: Column(
+                  children: [
+                    _buildHeader(context, data),
+                    const SizedBox(height: 16),
 
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Column(
-                      children: [
-                        _buildFundingProgressCard(data),
-                        if (data.heroesList.isNotEmpty) ...[
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Column(
+                        children: [
+                          _buildFundingProgressCard(data),
+                          if (data.heroesList.isNotEmpty) ...[
+                            const SizedBox(height: 20),
+                            _buildFundingHeroesCard(data),
+                          ],
                           const SizedBox(height: 20),
-                          _buildFundingHeroesCard(data),
+                          _buildVendorBidsCard(data),
+                          if (context.read<MissionFundingCubit>().milestoneResponseModel != null) ...[
+                            const SizedBox(height: 20),
+                            _buildMilestonesSection(context.read<MissionFundingCubit>().milestoneResponseModel!),
+                          ],
+                          const SizedBox(height: 20),
+                          _buildImpactCard(),
+                          const SizedBox(height: 40),
                         ],
-                        const SizedBox(height: 20),
-                        _buildVendorBidsCard(data),
-                        const SizedBox(height: 20),
-                        _buildImpactCard(),
-                        const SizedBox(height: 40),
-                      ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
 
-            _buildContributeButton(context, data),
-          ],
+              _buildContributeButton(context, data),
+            ],
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _buildMilestonesSection(MissionStatusResponse model) {
+    if (model.data.isEmpty) return const SizedBox();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Milestones",
+          style: GoogleFonts.publicSans(
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: 12),
+
+        ...model.data.map((m) {
+          return Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.grey.withOpacity(0.2)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.04),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+
+                /// Title / Description
+                Text(
+                  m.description,
+                  style: GoogleFonts.publicSans(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                /// Status
+                Text(
+                  "Status: ${m.status}",
+                  style: GoogleFonts.publicSans(
+                    fontSize: 14,
+                    color: Colors.grey.shade700,
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                /// Created At
+                Text(
+                  "Created: ${m.createdAt.toLocal().toString().split('.').first}",
+                  style: GoogleFonts.publicSans(
+                    fontSize: 13,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                /// Image (if exists)
+                if (m.imageUrls.isNotEmpty)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(
+                      m.imageUrls.first,
+                      height: 160,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+              ],
+            ),
+          );
+        }).toList(),
+      ],
     );
   }
 
@@ -150,13 +266,18 @@ class _MissionFundingMainState extends State<MissionFundingMain> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _glassIcon(
-                  Icons.arrow_back_ios_new,
-                  () {
-                    Navigator.popUntil(context, (route) => route.settings.name == "HomeScreen");
-                  },
-                ),
-                _glassIcon(Icons.share, () {}),
+                _glassIcon(Icons.arrow_back_ios_new, () {
+                  Navigator.popUntil(
+                    context,
+                    (route) => route.settings.name == "HomeScreen",
+                  );
+                }),
+                _glassIcon(Icons.share, () {
+
+                  shareContent();
+
+
+                }),
               ],
             ),
           ),
@@ -210,6 +331,28 @@ class _MissionFundingMainState extends State<MissionFundingMain> {
     );
   }
 
+  Future<void> shareContent() async {
+    try {
+      // 1️⃣ Download image
+      final tempDir = await getTemporaryDirectory();
+      final filePath = "${tempDir.path}/shared_image.jpg";
+
+      final response = await Dio().get(
+        widget.data.headerImage,
+        options: Options(responseType: ResponseType.bytes),
+      );
+
+      final file = File(filePath);
+      await file.writeAsBytes(response.data);
+
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        text: "Your small contribution can help fix this pothole and make the road safer for everyone. Join the mission!"
+      );
+    } catch (e) {
+      print("Error sharing: $e");
+    }
+  }
   Widget _glassIcon(IconData icon, VoidCallback onTap) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(999),
@@ -372,17 +515,35 @@ class _MissionFundingMainState extends State<MissionFundingMain> {
     final heroes = data.heroesList;
     final visible = heroes.length >= 3 ? 3 : heroes.length;
 
+    String _initials(String name) {
+      final parts = name.trim().split(" ");
+      if (parts.length == 1) {
+        return parts[0][0].toUpperCase();
+      }
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+
     return SizedBox(
       height: size,
       width: size + overlap * visible,
       child: Stack(
         children: [
           ...List.generate(visible, (i) {
+            final initials = _initials(heroes[i].name);
+
             return Positioned(
               left: overlap * i,
               child: CircleAvatar(
                 radius: 24,
-                backgroundImage: NetworkImage(heroes[i].imageUrl),
+                backgroundColor: const Color(0xFF6F3DFA).withOpacity(0.12),
+                child: Text(
+                  initials,
+                  style: GoogleFonts.publicSans(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: const Color(0xFF6F3DFA),
+                  ),
+                ),
               ),
             );
           }),
@@ -417,6 +578,10 @@ class _MissionFundingMainState extends State<MissionFundingMain> {
   // ===================================================================
   Widget _buildVendorBidsCard(MissionFundingModel data) {
     final bids = data.vendorBids;
+
+    if (bids.isEmpty) {
+      return _buildHandpickedVendorsCard();
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -476,12 +641,30 @@ class _MissionFundingMainState extends State<MissionFundingMain> {
   }
 
   Widget _buildVendorBidTile(int index, VendorBid bid) {
-    final bool selected = _selectedVendorIndex == index;
+    final bool selected = _selectedVendorId == bid.id;
+
+    String _initials(String name) {
+      final parts = name.trim().split(" ");
+      if (parts.length == 1) return parts[0][0].toUpperCase();
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+
+    final initials = _initials(bid.vendorName);
 
     return GestureDetector(
       onTap: () {
+        if (!widget.data.isMe) {
+          return;
+        }
+
+        final cubit = BlocProvider.of<MissionFundingCubit>(context);
+
+        if (cubit.bidAccepted) {
+          return;
+        }
+
         setState(() {
-          _selectedVendorIndex = selected ? null : index;
+          _selectedVendorId = selected ? null : bid.id;
         });
       },
       child: AnimatedContainer(
@@ -509,7 +692,15 @@ class _MissionFundingMainState extends State<MissionFundingMain> {
               children: [
                 CircleAvatar(
                   radius: 26,
-                  backgroundImage: NetworkImage(bid.avatar),
+                  backgroundColor: const Color(0xFF6F3DFA).withOpacity(0.12),
+                  child: Text(
+                    initials,
+                    style: GoogleFonts.publicSans(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: const Color(0xFF6F3DFA),
+                    ),
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -647,11 +838,104 @@ class _MissionFundingMainState extends State<MissionFundingMain> {
               ),
             ),
 
-            // extra spacing if selected to match design flow
             if (selected) const SizedBox(height: 8),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildHandpickedVendorsCard() {
+    final vendors = [
+      {
+        "name": "PaveRight Contractors",
+        "rating": "4.8 ★ | 50+ CivicFix missions",
+      },
+      {"name": "InfraBuilders Inc.", "rating": "4.6 ★ | 32+ CivicFix missions"},
+      {"name": "RoadMakers United", "rating": "4.5 ★ | 25+ CivicFix missions"},
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Handpicked Vendors for Tenders",
+          style: GoogleFonts.publicSans(
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: 12),
+
+        ...vendors.map((v) {
+          final initials = v["name"]!
+              .trim()
+              .split(" ")
+              .map((e) => e.isNotEmpty ? e[0] : "")
+              .take(2)
+              .join()
+              .toUpperCase();
+
+          return Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.grey.withOpacity(0.2)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.04),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 24,
+                  backgroundColor: const Color(0xFF6F3DFA).withOpacity(0.12),
+                  child: Text(
+                    initials,
+                    style: GoogleFonts.publicSans(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: const Color(0xFF6F3DFA),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        v["name"]!,
+                        style: GoogleFonts.publicSans(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        v["rating"]!,
+                        style: GoogleFonts.publicSans(
+                          fontSize: 14,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const Icon(Icons.chevron_right, color: Colors.grey),
+              ],
+            ),
+          );
+        }).toList(),
+      ],
     );
   }
 
@@ -703,8 +987,8 @@ class _MissionFundingMainState extends State<MissionFundingMain> {
     );
   }
 
-  refreshPage(){
-      context.read<MissionFundingCubit>().loadMission(widget.issueId);
+  refreshPage() {
+    context.read<MissionFundingCubit>().loadMission(widget.issueId);
   }
 
   // ===================================================================
@@ -732,20 +1016,52 @@ class _MissionFundingMainState extends State<MissionFundingMain> {
           width: double.infinity,
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: (data.isMe && !isFilled()) ? Colors.grey : Color(0xFF6F3DFA),
+              backgroundColor: Color(0xFF6F3DFA),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
             ),
-            onPressed: () {
-              if((data.isMe && isFilled())){
-                Navigator.push(
-                  context,
-                  CupertinoPageRoute(builder: (_) => MissionAccomplishedPage(issueId: widget.issueId)),
+            onPressed: () async {
+              final cubit = BlocProvider.of<MissionFundingCubit>(context);
+              if ((data.isMe &&
+                  (_selectedVendorId != null &&
+                      (widget.data.fundedPercent * 100.0) == 100.0) &&
+                  !cubit.bidAccepted)) {
+                final dio = Dio();
+
+                final url =
+                    "http://3.109.152.78:8080/api/v1/bids/$_selectedVendorId/accept";
+
+                final prefs = await SharedPreferences.getInstance();
+
+                final response = await dio.post(
+                  url,
+                  options: Options(
+                    headers: {'X-User-Id': prefs.getString("userId")},
+                    contentType: "application/json",
+                  ),
                 );
+
+                refreshPage();
+
                 return;
               }
+
+              if (widget.data.isMe && cubit.bidAccepted) {
+                if (cubit.bidCompleted) {
+                  Navigator.push(
+                    context,
+                    CupertinoPageRoute(
+                      builder: (_) =>
+                          MissionAccomplishedPage(issueId: widget.issueId),
+                    ),
+                  );
+                }
+
+                return;
+              }
+
               showModalBottomSheet(
                 context: context,
                 isScrollControlled: true,
@@ -763,9 +1079,7 @@ class _MissionFundingMainState extends State<MissionFundingMain> {
               );
             },
             child: Text(
-              ((data.isMe && isFilled()))
-                  ? "Initiate Mission Go!"
-                  : "Contribute Now & Be a Hero!",
+              (data.isMe) ? getText() : "Contribute Now & Be a Hero!",
               style: GoogleFonts.publicSans(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -778,8 +1092,32 @@ class _MissionFundingMainState extends State<MissionFundingMain> {
     );
   }
 
-  isFilled(){
-    if(_selectedVendorIndex == null || widget.data.fundedPercent != 100){
+  getText() {
+    final cubit = BlocProvider.of<MissionFundingCubit>(context);
+
+    if (widget.data.isMe &&
+        _selectedVendorId != null &&
+        widget.data.fundedPercent == 100 &&
+        !cubit.bidAccepted) {
+      return "Start the work";
+    } else if (widget.data.isMe && cubit.bidAccepted) {
+      return cubit.bidCompleted
+          ? 'Approve payment'
+          : (cubit.incidentReport?.status ?? "").toLowerCase().contains(
+              'schedul',
+            )
+          ? 'Work scheduled'
+          : 'Work in progress';
+    }
+
+    return "Contribute & launch a mission";
+  }
+
+  ///Contribute & launch a mission
+  ///Start the work
+  ///Approve payment
+  isFilled() {
+    if (_selectedVendorId == null || widget.data.fundedPercent != 100) {
       return false;
     }
     return true;

@@ -1,6 +1,11 @@
+import 'dart:io';
+
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'mission_accomplished_cubit.dart';
 import 'before_after_fade.dart';
 import 'model/MissionAccomplishedModel.dart';
@@ -19,9 +24,14 @@ class MissionAccomplishedPage extends StatelessWidget {
   }
 }
 
-class _MissionAccomplishedView extends StatelessWidget {
+class _MissionAccomplishedView extends StatefulWidget {
   const _MissionAccomplishedView({super.key});
 
+  @override
+  State<_MissionAccomplishedView> createState() => _MissionAccomplishedViewState();
+}
+
+class _MissionAccomplishedViewState extends State<_MissionAccomplishedView> {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<MissionAccomplishedCubit, MissionAccomplishedState>(
@@ -316,7 +326,9 @@ class _MissionAccomplishedView extends StatelessWidget {
                     fontSize: 15,
                     color: Colors.white),
               ),
-              onPressed: () {},
+              onPressed: () {
+                shareContent();
+              },
             ),
           ),
           const SizedBox(height: 12),
@@ -344,5 +356,28 @@ class _MissionAccomplishedView extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Future<void> shareContent() async {
+    try {
+      MissionAccomplishedCubit  cubit  = BlocProvider.of<MissionAccomplishedCubit>(context);
+      final tempDir = await getTemporaryDirectory();
+      final filePath = "${tempDir.path}/shared_image.jpg";
+
+      final response = await Dio().get(
+        cubit.fixedImage!,
+        options: Options(responseType: ResponseType.bytes),
+      );
+
+      final file = File(filePath);
+      await file.writeAsBytes(response.data);
+
+      await Share.shareXFiles(
+          [XFile(file.path)],
+          text: "We did it! From a neighborhood problem to a community-powered solution. See the transformation you made possible."
+      );
+    } catch (e) {
+      print("Error sharing: $e");
+    }
   }
 }

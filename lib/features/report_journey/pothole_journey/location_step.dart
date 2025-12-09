@@ -153,11 +153,7 @@ class _ReportLocationStepState extends State<ReportLocationStep> {
 
                       // Marker in center
                       Center(
-                        child: Icon(
-                          Symbols.location_on,
-                          color: const Color(0xFF6D38FF),
-                          size: 48,
-                        ),
+                        child: Image.asset("assets/map_icon.png", height: 64,)
                       ),
 
                       // "Use my location" floating button

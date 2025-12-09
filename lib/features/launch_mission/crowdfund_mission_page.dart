@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -114,7 +115,51 @@ class _CrowdfundMissionPageState extends State<CrowdfundMissionPage> {
                         aiBudget == 0 ? "N/A" : "₹${aiBudget.round()}",
                       ),
                     ),
-
+                    const SizedBox(height: 20),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF6F42C1).withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SvgPicture.asset('assets/acko.svg', height: 18, color: Color(0xFF6F42C1),),
+                            // Icon(
+                            //   Icons.rocket_launch,
+                            //   color: const Color(0xFF6F42C1),
+                            // ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "Acko Customers Double the Impact",
+                                    style: GoogleFonts.publicSans(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                      color: const Color(0xFF6F42C1),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    "As an Acko customer, every rupee you give can be doubled by the Acko CSR fund—unlock matching support and fix this blackspot faster for all of HSR.",
+                                    style: GoogleFonts.publicSans(
+                                      fontSize: 14,
+                                      color: const Color(0xFF6F42C1),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 20),
 
                     //------------------- SEED CAPITAL (10% of budget) -------------------

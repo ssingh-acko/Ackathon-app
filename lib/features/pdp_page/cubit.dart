@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../incident_details/cubit.dart';
 import 'model/campaign_contributor_model.dart';
+import 'model/mission_status_response.dart';
 import 'model/pdp_page_model.dart';
 import 'model/vendor_api_model.dart';
 
@@ -36,6 +37,11 @@ class MissionFundingCubit extends Cubit<MissionFundingState> {
   final Dio _dio = Dio();
   final String issueId;
   String? campaignId;
+  bool bidAccepted = false;
+  bool bidCompleted = false;
+  MissionStatusResponse? milestoneResponseModel;
+
+  IncidentReport? incidentReport;
 
   MissionFundingCubit(this.issueId) : super(MissionFundingInitial()) {
     loadMission(issueId);
@@ -51,16 +57,27 @@ class MissionFundingCubit extends Cubit<MissionFundingState> {
     final vendorUrl = "http://3.109.152.78:8080/api/v1/bids/issue/$issueId";
     final contributorUrl =
         "http://3.109.152.78:8080/api/v1/crowdfunding/campaigns/issue/$issueId";
+    final milestoneUrl =
+        "http://3.109.152.78:8080/api/v1/milestones/issue/$issueId";
+
     final incidentResponse = await _dio.get(incidentUrl);
     final vendorResponse = await _dio.get(vendorUrl);
     final contributorResponse = await _dio.get(contributorUrl);
+    final milestoneResponse = await _dio.get(milestoneUrl);
 
-    IncidentReport? incidentReport = IncidentReport.fromJson(
+    incidentReport = IncidentReport.fromJson(
       incidentResponse.data,
     );
     VendorBidsResponse? vendorBidsResponse = VendorBidsResponse.fromJson(
       vendorResponse.data,
     );
+
+    if(vendorBidsResponse != null){
+      bidAccepted = vendorBidsResponse.data.content.any((element) => element.status.compareTo("ACCEPTED") == 0 || element.status.compareTo("PAID") == 0);
+      bidCompleted = vendorBidsResponse.data.content.any((element) => element.status.compareTo("PAID") == 0);
+    }
+
+    milestoneResponseModel = MissionStatusResponse.fromJson(milestoneResponse.data);
     CampaignFundingResponse? campaignFundingResponse =
         CampaignFundingResponse.fromJson(contributorResponse.data);
     campaignId = campaignFundingResponse.data.id;
@@ -70,11 +87,11 @@ class MissionFundingCubit extends Cubit<MissionFundingState> {
 
     try {
       final model = MissionFundingModel(
-        title: incidentReport.title,
-        location: incidentReport.address,
-        headerImage: incidentReport.imageUrls.first,
-        isMe: incidentReport.reporterName.compareTo(myUserId) == 0,
-        totalAmount: (incidentReport.ai!.estimatedBudget ?? 0.0).toInt(),
+        title: incidentReport!.title,
+        location: incidentReport!.address,
+        headerImage: incidentReport!.imageUrls.first,
+        isMe: incidentReport!.reporterName.compareTo(myUserId) == 0,
+        totalAmount: (incidentReport!.ai!.estimatedBudget ?? 0.0).toInt(),
         currentPaid: campaignFundingResponse.data.amountCollected.toInt(),
         heroesList: campaignFundingResponse.data.contributors
             .map(
@@ -91,12 +108,13 @@ class MissionFundingCubit extends Cubit<MissionFundingState> {
                 vendorName: content.serviceProviderName,
                 avatar: 'https://i.pravatar.cc/150?img=60',
                 proposedAmount: content.bidAmount,
-                timeline: '3 months',
+                timeline: content.expectedTimeOfCompletion,
                 rating: 4.9,
                 reviews: 100,
                 status: content.status,
                 materialUsed: content.primaryMaterialUsed,
                 whyChooseMe: content.whyChooseTeam,
+                id: content.id,
               ),
             )
             .toList(),

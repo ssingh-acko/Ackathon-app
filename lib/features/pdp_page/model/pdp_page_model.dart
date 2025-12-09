@@ -61,6 +61,8 @@ class VendorBid {
   final int thumbsUp;
   final List<String> materialUsed;
   final String whyChooseMe;
+  final String id;
+  Map<String, dynamic>? milestoneData;
 
   VendorBid({
     required this.vendorName,
@@ -73,5 +75,6 @@ class VendorBid {
     this.thumbsUp = 0,
     required this.materialUsed,
     required this.whyChooseMe,
+    required this.id
   });
 }
