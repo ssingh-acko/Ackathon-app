@@ -10,6 +10,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../incident_details/cubit.dart';
 import 'completed_screen.dart';
 import 'contribute_screen.dart';
 import 'cubit.dart';
@@ -322,6 +323,25 @@ class _MissionFundingMainState extends State<MissionFundingMain> {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 8),
+                  GestureDetector(
+                    onTap: () => _openAiAnalysisBottomSheet(context),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 14),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        "Check AI Analysis",
+                        style: GoogleFonts.publicSans(
+                          color: Colors.black,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -330,6 +350,241 @@ class _MissionFundingMainState extends State<MissionFundingMain> {
       ),
     );
   }
+
+  void _openAiAnalysisBottomSheet(BuildContext context) {
+    final cubit = context.read<MissionFundingCubit>();
+
+    if (cubit.incidentReport == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("AI analysis not available.")),
+      );
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) {
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.85,
+          maxChildSize: 0.95,
+          minChildSize: 0.4,
+          builder: (_, controller) {
+            return SingleChildScrollView(
+              controller: controller,
+              padding: const EdgeInsets.all(16),
+              child: _buildAiAnalysisSection(cubit.incidentReport!, false),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildAiAnalysisSection(IncidentReport data, bool isDark) {
+    final ai = data.ai;
+    if (ai == null) return const SizedBox();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.auto_awesome, color: const Color(0xFF6F42C1), size: 30),
+            const SizedBox(width: 8),
+            Text(
+              "AI Analysis",
+              style: GoogleFonts.publicSans(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 16),
+
+        if (ai.issueSummary != null)
+          _aiCard(
+            icon: Icons.campaign,
+            title: "Pothole Analysis",
+            child: Text(
+              ai.issueSummary!,
+              style: GoogleFonts.publicSans(fontSize: 14, color: Colors.grey[700]),
+            ),
+          ),
+
+        if (ai.technicalNotes != null)
+          _aiCard(
+            icon: Icons.biotech,
+            title: "Technical Diagnosis",
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _techRow("Pothole Type", ai.technicalNotes!.potholeType),
+                _techRow("Depth Estimate",
+                    ai.technicalNotes!.depthEstimateCm != null
+                        ? "${ai.technicalNotes!.depthEstimateCm} cm"
+                        : null),
+                _techRow("Width Spread",
+                    ai.technicalNotes!.widthSpreadM != null
+                        ? "${ai.technicalNotes!.widthSpreadM} m"
+                        : null),
+                _techRow("Road Type", ai.technicalNotes!.roadType),
+
+                if (ai.technicalNotes!.riskAmplifiers.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text("Risk Amplifiers",
+                      style: GoogleFonts.publicSans(fontSize: 13, color: Colors.grey[600])),
+                  const SizedBox(height: 4),
+
+                  Wrap(
+                    spacing: 6,
+                    children: ai.technicalNotes!.riskAmplifiers.map((e) {
+                      return Chip(
+                        label: Text(e, style: const TextStyle(fontSize: 12)),
+                        backgroundColor: Colors.red.withOpacity(0.1),
+                        labelStyle: const TextStyle(color: Colors.red),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ],
+            ),
+          ),
+
+        if (ai.imageDescriptions.isNotEmpty)
+          ...ai.imageDescriptions.map((img) {
+            return _aiCard(
+              icon: Icons.image,
+              title: "AI Visual Analysis",
+              child: Column(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(img.imageUrl),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    img.description,
+                    style: GoogleFonts.publicSans(
+                      fontSize: 13,
+                      fontStyle: FontStyle.italic,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+
+        if (ai.estimatedBudget != null || ai.budgetBreakdown != null)
+          _aiCard(
+            icon: Icons.construction,
+            title: "Cost & Material Estimation",
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (ai.estimatedBudget != null)
+                  _techRow("Estimated Budget", "₹${ai.estimatedBudget!.round()}"),
+
+                if (ai.budgetBreakdown != null) ...[
+                  const SizedBox(height: 10),
+                  Text("Budget Breakdown:",
+                      style: GoogleFonts.publicSans(
+                          fontSize: 13, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 6),
+                  Text(
+                    ai.budgetBreakdown!.replaceAll('_', ' '),
+                    style: GoogleFonts.publicSans(fontSize: 13, color: Colors.grey[700]),
+                  ),
+                ],
+              ],
+            ),
+          ),
+
+        if (ai.recommendations != null)
+          _aiCard(
+            icon: Icons.check_circle,
+            title: "AI Recommendations",
+            child: Text(
+              ai.recommendations!,
+              style: GoogleFonts.publicSans(fontSize: 14, color: Colors.grey[700]),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _aiCard({
+    required IconData icon,
+    required String title,
+    required Widget child,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: const Color(0xFF6F42C1)),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  title,
+                  style: GoogleFonts.publicSans(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          child,
+        ],
+      ),
+    );
+  }
+
+  Widget _techRow(String label, String? value) {
+    if (value == null) return const SizedBox();
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(label,
+                style: GoogleFonts.publicSans(fontSize: 13, color: Colors.grey[600])),
+          ),
+          Text(
+            value,
+            style: GoogleFonts.publicSans(fontSize: 13, fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
+    );
+  }
+
+
 
   Future<void> shareContent() async {
     try {
