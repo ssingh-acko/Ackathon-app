@@ -225,8 +225,8 @@ class ReportPage extends StatelessWidget {
           _categoryItem(
             context,
             icon: "🐾",
-            title: "Animals & Nuisance",
-            subtitle: "Stray dogs or cattle causing danger",
+            title: "Stray animal danger",
+            subtitle: "Stray dogs causing danger",
           ),
           _categoryItem(
             context,
