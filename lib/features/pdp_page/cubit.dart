@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../incident_details/cubit.dart';
@@ -39,6 +40,7 @@ class MissionFundingCubit extends Cubit<MissionFundingState> {
   String? campaignId;
   bool bidAccepted = false;
   bool bidCompleted = false;
+  bool hasUserPaid = false;
   MissionStatusResponse? milestoneResponseModel;
 
   IncidentReport? incidentReport;
@@ -84,6 +86,9 @@ class MissionFundingCubit extends Cubit<MissionFundingState> {
     final String myUserId = (await SharedPreferences.getInstance()).getString(
       'userId',
     )!;
+
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    hasUserPaid = campaignFundingResponse.data.contributors.any((contributor) => contributor.userId.toString().compareTo(sharedPreferences.getString("userId") ?? "0") == 0);
 
     try {
       final model = MissionFundingModel(

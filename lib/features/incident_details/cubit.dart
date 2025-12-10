@@ -86,6 +86,8 @@ class IncidentReport {
   final List<String> imageUrls;
   final List<String> imageCaptions;
   final String status;
+  final double? latitude;
+  final double? longitude;
 
   final DangerInfo dangerInfo;
   final List<IncidentMeta> metadata;
@@ -105,6 +107,8 @@ class IncidentReport {
     required this.tags,
     required this.ai,
     required this.status,
+    this.longitude,
+    this.latitude,
   });
 
   factory IncidentReport.fromJson(Map<String, dynamic> json) {
@@ -126,6 +130,8 @@ class IncidentReport {
       reporterName: issue["reporterId"] ?? "User ${issue["reporterId"]}",
       address: issue["address"] ?? "",
       status: issue["status"],
+      latitude: issue['latitude'],
+      longitude: issue['longitude'],
       imageUrls: List<String>.from(issue["imageUrls"] ?? []),
       imageCaptions: captions,
       dangerInfo: DangerInfo(

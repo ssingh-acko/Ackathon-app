@@ -9,6 +9,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../incident_details/cubit.dart';
 import 'completed_screen.dart';
@@ -86,6 +87,13 @@ class MissionFundingMain extends StatefulWidget {
 
 class _MissionFundingMainState extends State<MissionFundingMain> {
   String? _selectedVendorId;
+  MissionFundingCubit? cubit;
+
+  @override
+  void initState() {
+    cubit = BlocProvider.of(context);
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -118,6 +126,27 @@ class _MissionFundingMainState extends State<MissionFundingMain> {
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Column(
                         children: [
+                          if(cubit?.hasUserPaid ?? false)...[
+                            Padding(
+                              padding: const EdgeInsets.only( bottom: 16),
+                              child: Container(
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF6F3DFA).withOpacity(0.06),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    "Thanks for your contribution 👍",
+                                    style: GoogleFonts.publicSans(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                           _buildFundingProgressCard(data),
                           if (data.heroesList.isNotEmpty) ...[
                             const SizedBox(height: 20),
@@ -304,43 +333,58 @@ class _MissionFundingMainState extends State<MissionFundingMain> {
                     ),
                   ),
                   const SizedBox(height: 6),
+                  GestureDetector(
+                    onTap: (){
+                      final cubit = context.read<MissionFundingCubit>();
+                      openGoogleMaps(cubit.incidentReport!.latitude!, cubit.incidentReport!.longitude!);
+                    },
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.location_on,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            data.location,
+                            style: GoogleFonts.publicSans(
+                              fontSize: 14,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Icon(
-                        Icons.location_on,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          data.location,
-                          style: GoogleFonts.publicSans(
-                            fontSize: 14,
+                      GestureDetector(
+                        onTap: () => _openAiAnalysisBottomSheet(context),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 14),
+                          decoration: BoxDecoration(
                             color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            "Check AI Analysis",
+                            style: GoogleFonts.publicSans(
+                              color: Colors.black,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13,
+                            ),
                           ),
                         ),
                       ),
+                      IconButton(onPressed: (){
+                        final cubit = context.read<MissionFundingCubit>();
+                        openGoogleMaps(cubit.incidentReport!.latitude!, cubit.incidentReport!.longitude!);
+                      }, icon: Icon(Icons.location_on, color: Colors.white,))
                     ],
-                  ),
-                  const SizedBox(height: 8),
-                  GestureDetector(
-                    onTap: () => _openAiAnalysisBottomSheet(context),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 14),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        "Check AI Analysis",
-                        style: GoogleFonts.publicSans(
-                          color: Colors.black,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
                   ),
                 ],
               ),
@@ -351,6 +395,16 @@ class _MissionFundingMainState extends State<MissionFundingMain> {
     );
   }
 
+  Future<void> openGoogleMaps(double lat, double lng) async {
+    final Uri googleMapUrl = Uri.parse(
+        "https://www.google.com/maps/search/?api=1&query=$lat,$lng");
+
+    if (await canLaunchUrl(googleMapUrl)) {
+      await launchUrl(googleMapUrl, mode: LaunchMode.externalApplication);
+    } else {
+      throw "Could not open Google Maps";
+    }
+  }
   void _openAiAnalysisBottomSheet(BuildContext context) {
     final cubit = context.read<MissionFundingCubit>();
 
